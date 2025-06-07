@@ -635,8 +635,9 @@ def main():
             # Export chat option
             if st.button("📥 Export Chat", type="secondary", use_container_width=True):
                 chat_text = f"YouTube Transcript Chat - Export\n"
-                chat_text += f"Video: {st.session_state.video_info.get('title', 'Unknown')}\n"
-                chat_text += f"Channel: {st.session_state.video_info.get('channel', 'Unknown')}\n"
+                video_info = st.session_state.enhanced_chat_handler.get_video_info()
+                chat_text += f"Video: {video_info.get('title', 'Unknown') if video_info else 'Unknown'}\n"
+                chat_text += f"Channel: {video_info.get('channel', 'Unknown') if video_info else 'Unknown'}\n"
                 chat_text += f"Export Date: {st.session_state.chat_history[-1].get('timestamp', 'Unknown') if st.session_state.chat_history else 'Unknown'}\n"
                 chat_text += "=" * 50 + "\n\n"
                 
@@ -647,7 +648,7 @@ def main():
                 st.download_button(
                     label="⬇️ Download Chat History",
                     data=chat_text,
-                    file_name=f"youtube_chat_{st.session_state.video_info.get('video_id', 'unknown')}.txt",
+                    file_name=f"youtube_chat_{video_info.get('video_id', 'unknown') if video_info else 'unknown'}.txt",
                     mime="text/plain",
                     use_container_width=True
                 )

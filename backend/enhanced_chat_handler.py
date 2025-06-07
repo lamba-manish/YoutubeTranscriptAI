@@ -4,6 +4,7 @@ Enhanced chat handler using LangChain and vector embeddings
 import os
 from backend.database import DatabaseManager
 from backend.vector_manager import VectorManager
+from backend.evaluation_system import ResponseEvaluator
 import streamlit as st
 
 class EnhancedChatHandler:
@@ -12,6 +13,7 @@ class EnhancedChatHandler:
     def __init__(self):
         self.db_manager = DatabaseManager()
         self.vector_manager = VectorManager(self.db_manager)
+        self.evaluator = ResponseEvaluator()
         self.current_video_id = None
         self.current_video_info = None
     
@@ -76,11 +78,27 @@ class EnhancedChatHandler:
             return "Please load a video first before asking questions."
         
         try:
-            response = self.vector_manager.query_transcript(
+            # Get AI response using vector search
+            response, context = self.vector_manager.query_transcript_with_context(
                 self.current_video_id, 
                 user_question
             )
-            return response
+            
+            # Evaluate response quality
+            try:
+                evaluation_scores = self.evaluator.evaluate_response(
+                    user_question, response, context
+                )
+                evaluation_summary = self.evaluator.get_evaluation_summary(evaluation_scores)
+                
+                # Append evaluation scores to response
+                enhanced_response = f"{response}\n\n---\n{evaluation_summary}"
+                return enhanced_response
+                
+            except Exception as eval_error:
+                print(f"Debug - Error evaluating response: {eval_error}")
+                # Return response without evaluation if evaluation fails
+                return response
             
         except Exception as e:
             print(f"Debug - Error getting response: {str(e)}")

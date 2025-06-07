@@ -111,10 +111,9 @@ class VectorManager:
                 embeddings_list.append(item['embedding'])
             
             # Create FAISS vector store
-            vector_store = FAISS.from_documents_and_embeddings(
-                documents, 
-                embeddings_list, 
-                self.embeddings
+            vector_store = FAISS.from_embeddings(
+                text_embeddings=[(doc.page_content, emb) for doc, emb in zip(documents, embeddings_list)],
+                embedding=self.embeddings
             )
             
             print(f"Debug - Created FAISS vector store with {len(documents)} documents")
