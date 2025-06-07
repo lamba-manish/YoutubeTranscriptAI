@@ -266,7 +266,13 @@ class VectorManager:
             if not video_data:
                 return "No video transcript found."
             
-            transcript_text = video_data.transcript_text
+            # Handle both dict and object formats
+            if isinstance(video_data, dict):
+                transcript_text = video_data.get('transcript', video_data.get('transcript_text', ''))
+                title = video_data.get('title', 'Unknown')
+            else:
+                transcript_text = video_data.transcript_text
+                title = video_data.title or 'Unknown'
             
             highlight_prompt = f"""
             Analyze this YouTube video transcript and extract {num_highlights} key highlights or important moments.
@@ -275,7 +281,7 @@ class VectorManager:
             2. The key quote or content
             3. Why it's significant
             
-            Video Title: {video_data.title or 'Unknown'}
+            Video Title: {title}
             
             Transcript:
             {transcript_text[:5000]}...
@@ -304,13 +310,21 @@ class VectorManager:
             if not video_data:
                 return "No video transcript found."
             
-            transcript_text = video_data.transcript_text
+            # Handle both dict and object formats
+            if isinstance(video_data, dict):
+                transcript_text = video_data.get('transcript', video_data.get('transcript_text', ''))
+                title = video_data.get('title', 'Unknown')
+                channel = video_data.get('channel', 'Unknown')
+            else:
+                transcript_text = video_data.transcript_text
+                title = video_data.title or 'Unknown'
+                channel = video_data.channel or 'Unknown'
             
             mood_prompt = f"""
             Analyze the overall mood, tone, and emotional characteristics of this YouTube video based on its transcript.
             
-            Video Title: {video_data.title or 'Unknown'}
-            Channel: {video_data.channel or 'Unknown'}
+            Video Title: {title}
+            Channel: {channel}
             
             Transcript:
             {transcript_text[:4000]}...

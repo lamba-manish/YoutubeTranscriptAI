@@ -367,6 +367,39 @@ def main():
     with st.sidebar:
         st.header("📹 Video Input")
         
+        # Show available videos button
+        if st.button("📋 Show Saved Videos", type="secondary", use_container_width=True):
+            st.session_state.show_saved_videos = not st.session_state.get('show_saved_videos', False)
+        
+        # Display saved videos if requested
+        if st.session_state.get('show_saved_videos', False):
+            try:
+                available_videos = st.session_state.enhanced_chat_handler.get_available_videos()
+                if available_videos:
+                    st.markdown("### 💾 Saved Videos")
+                    for video in available_videos[:8]:  # Show max 8 in sidebar
+                        with st.container():
+                            # Video info display
+                            title_short = video['title'][:30] + "..." if len(video['title']) > 30 else video['title']
+                            st.markdown(f"**{title_short}**")
+                            st.markdown(f"`{video['video_id']}`")
+                            st.markdown(f"*{video['channel']}*")
+                            
+                            # Load button
+                            if st.button(f"Load", key=f"load_{video['video_id']}", use_container_width=True):
+                                with st.spinner("Loading..."):
+                                    success = st.session_state.enhanced_chat_handler.load_video(video['video_id'])
+                                    if success:
+                                        st.session_state.current_video_loaded = True
+                                        st.session_state.chat_history = []
+                                        st.session_state.show_saved_videos = False
+                                        st.rerun()
+                            st.divider()
+                else:
+                    st.info("No saved videos yet")
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
+        
         # Video ID input
         video_input = st.text_input(
             "YouTube Video ID",
