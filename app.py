@@ -87,6 +87,42 @@ def generate_study_notes_text(notes):
     
     return text
 
+def generate_comprehensive_report():
+    """Generate a comprehensive report with all available content"""
+    report = "COMPREHENSIVE VIDEO ANALYSIS REPORT\n\n"
+    
+    # Video info
+    if st.session_state.get('enhanced_chat_handler') and st.session_state.enhanced_chat_handler.is_video_loaded():
+        video_info = st.session_state.enhanced_chat_handler.get_video_info()
+        if video_info:
+            report += f"VIDEO: {video_info.get('title', 'Unknown Title')}\n"
+            report += f"CHANNEL: {video_info.get('channel', 'Unknown Channel')}\n"
+            report += f"DURATION: {video_info.get('duration', 'Unknown')}\n\n"
+    
+    # Add all available content
+    if st.session_state.get('video_summary'):
+        report += f"VIDEO SUMMARY:\n{st.session_state.video_summary}\n\n"
+    
+    if st.session_state.get('video_highlights'):
+        report += f"HIGHLIGHT REEL:\n{st.session_state.video_highlights}\n\n"
+    
+    if st.session_state.get('video_mood'):
+        report += f"MOOD ANALYSIS:\n{st.session_state.video_mood}\n\n"
+    
+    if st.session_state.get('study_guide'):
+        guide_text = generate_study_guide_text(st.session_state.study_guide)
+        report += f"{guide_text}\n"
+    
+    if st.session_state.get('study_notes'):
+        notes_text = generate_study_notes_text(st.session_state.study_notes)
+        report += f"{notes_text}\n"
+    
+    if st.session_state.get('flashcards'):
+        flashcard_text = generate_flashcard_text(st.session_state.flashcards)
+        report += f"{flashcard_text}\n"
+    
+    return report
+
 # Page configuration
 st.set_page_config(
     page_title="YouTube Transcript Chat AI",
@@ -625,6 +661,41 @@ def main():
                             st.session_state.flashcards = flashcards
                             st.rerun()
                 
+                # Download All Feature
+                st.markdown("#### 📦 Export Options")
+                col6, col7 = st.columns(2)
+                
+                with col6:
+                    # Check if any content is available for download
+                    has_content = any([
+                        st.session_state.get('video_summary'),
+                        st.session_state.get('video_highlights'),
+                        st.session_state.get('video_mood'),
+                        st.session_state.get('study_guide'),
+                        st.session_state.get('study_notes'),
+                        st.session_state.get('flashcards')
+                    ])
+                    
+                    if has_content:
+                        comprehensive_report = generate_comprehensive_report()
+                        st.download_button(
+                            label="📋 Download Complete Report",
+                            data=generate_pdf_content("Complete Video Analysis Report", comprehensive_report),
+                            file_name=f"complete_report_{st.session_state.get('current_video_id', 'video')}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+                    else:
+                        st.button("📋 Download Complete Report", disabled=True, use_container_width=True, help="Generate some content first")
+                
+                with col7:
+                    if st.button("🗑️ Clear All Content", use_container_width=True):
+                        # Clear all generated content
+                        for key in ['video_summary', 'video_highlights', 'video_mood', 'study_guide', 'study_notes', 'flashcards', 'show_answers']:
+                            if key in st.session_state:
+                                del st.session_state[key]
+                        st.rerun()
+                
                 # Display history if requested
                 if st.session_state.get('show_history', False):
                     st.divider()
@@ -758,6 +829,13 @@ def main():
             # Feature display panels
             if st.session_state.get('video_summary'):
                 with st.expander("📋 Video Summary", expanded=False):
+                    # Add download button for summary
+                    st.download_button(
+                        label="📄 Download Summary as PDF",
+                        data=generate_pdf_content("Video Summary", st.session_state.video_summary),
+                        file_name=f"summary_{st.session_state.get('current_video_id', 'video')}.pdf",
+                        mime="application/pdf"
+                    )
                     st.markdown(st.session_state.video_summary)
             
             if st.session_state.get('video_highlights'):
@@ -836,22 +914,31 @@ def main():
                     st.error("Failed to generate flashcards")
             
             if st.session_state.get('study_notes'):
-                with st.expander("📝 Quick Study Notes", expanded=False):
-                    notes = st.session_state.study_notes
-                    if notes.get('error'):
-                        st.error(notes['error'])
-                    else:
-                        st.markdown(f"**Summary:** {notes.get('summary', 'N/A')}")
-                        
-                        if notes.get('key_points'):
-                            st.markdown("**Key Points:**")
-                            for point in notes['key_points']:
-                                st.markdown(f"• {point}")
-                        
-                        if notes.get('actionable_items'):
-                            st.markdown("**Action Items:**")
-                            for item in notes['actionable_items']:
-                                st.markdown(f"✓ {item}")
+                st.subheader("📝 Quick Study Notes")
+                notes = st.session_state.study_notes
+                if notes.get('error'):
+                    st.error(notes['error'])
+                else:
+                    # Add download button for study notes
+                    study_notes_text = generate_study_notes_text(notes)
+                    st.download_button(
+                        label="📄 Download Study Notes as PDF",
+                        data=generate_pdf_content("Quick Study Notes", study_notes_text),
+                        file_name=f"study_notes_{st.session_state.get('current_video_id', 'video')}.pdf",
+                        mime="application/pdf"
+                    )
+                    
+                    st.markdown(f"**Summary:** {notes.get('summary', 'N/A')}")
+                    
+                    if notes.get('key_points'):
+                        st.markdown("**Key Points:**")
+                        for point in notes['key_points']:
+                            st.markdown(f"• {point}")
+                    
+                    if notes.get('actionable_items'):
+                        st.markdown("**Action Items:**")
+                        for item in notes['actionable_items']:
+                            st.markdown(f"✓ {item}")
             
             # Chat history counter
             if st.session_state.chat_history:
