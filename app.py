@@ -2,8 +2,90 @@ import streamlit as st
 import re
 import os
 import json
+from io import BytesIO
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from youtube_utils import YouTubeTranscriptExtractor
 from backend.enhanced_chat_handler import EnhancedChatHandler
+
+def generate_flashcard_text(cards):
+    """Convert flashcards to formatted text"""
+    text = "FLASHCARDS\n\n"
+    for i, card in enumerate(cards):
+        text += f"Card {i+1} ({card.get('difficulty', 'medium')})\n"
+        text += f"Q: {card.get('question', 'No question')}\n"
+        text += f"A: {card.get('answer', 'No answer')}\n\n"
+    return text
+
+def generate_pdf_content(title, content):
+    """Generate PDF content from text"""
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    styles = getSampleStyleSheet()
+    story = []
+    
+    # Title
+    title_para = Paragraph(f"<b>{title}</b>", styles['Title'])
+    story.append(title_para)
+    story.append(Spacer(1, 12))
+    
+    # Content
+    for line in content.split('\n'):
+        if line.strip():
+            para = Paragraph(line, styles['Normal'])
+            story.append(para)
+        story.append(Spacer(1, 6))
+    
+    doc.build(story)
+    buffer.seek(0)
+    return buffer.getvalue()
+
+def generate_study_guide_text(guide):
+    """Convert study guide to formatted text"""
+    text = "STUDY GUIDE\n\n"
+    
+    if guide.get('overview'):
+        text += f"OVERVIEW:\n{guide['overview']}\n\n"
+    
+    if guide.get('learning_objectives'):
+        text += "LEARNING OBJECTIVES:\n"
+        for obj in guide['learning_objectives']:
+            text += f"• {obj}\n"
+        text += "\n"
+    
+    if guide.get('key_concepts'):
+        text += "KEY CONCEPTS:\n"
+        for concept in guide['key_concepts']:
+            if isinstance(concept, dict):
+                text += f"• {concept.get('term', 'Unknown')}: {concept.get('definition', 'No definition')}\n"
+            else:
+                text += f"• {concept}\n"
+        text += "\n"
+    
+    return text
+
+def generate_study_notes_text(notes):
+    """Convert study notes to formatted text"""
+    text = "QUICK STUDY NOTES\n\n"
+    
+    if notes.get('summary'):
+        text += f"SUMMARY:\n{notes['summary']}\n\n"
+    
+    if notes.get('key_points'):
+        text += "KEY POINTS:\n"
+        for point in notes['key_points']:
+            text += f"• {point}\n"
+        text += "\n"
+    
+    if notes.get('actionable_items'):
+        text += "ACTION ITEMS:\n"
+        for item in notes['actionable_items']:
+            text += f"✓ {item}\n"
+        text += "\n"
+    
+    return text
 
 # Page configuration
 st.set_page_config(
@@ -688,38 +770,70 @@ def main():
             
             # Study Guide Features
             if st.session_state.get('study_guide'):
-                with st.expander("📚 Study Guide", expanded=False):
-                    guide = st.session_state.study_guide
-                    if guide.get('error'):
-                        st.error(guide['error'])
-                    else:
-                        st.markdown(f"**Overview:** {guide.get('overview', 'N/A')}")
-                        
-                        if guide.get('learning_objectives'):
-                            st.markdown("**Learning Objectives:**")
-                            for obj in guide['learning_objectives']:
-                                st.markdown(f"• {obj}")
-                        
-                        if guide.get('key_concepts'):
-                            st.markdown("**Key Concepts:**")
-                            for concept in guide['key_concepts']:
-                                if isinstance(concept, dict):
-                                    st.markdown(f"• **{concept.get('term', 'Unknown')}**: {concept.get('definition', 'No definition')}")
-                                else:
-                                    st.markdown(f"• {concept}")
+                st.subheader("📚 Study Guide")
+                guide = st.session_state.study_guide
+                if guide.get('error'):
+                    st.error(guide['error'])
+                else:
+                    # Add download button for study guide
+                    study_guide_text = generate_study_guide_text(guide)
+                    st.download_button(
+                        label="📄 Download Study Guide as PDF",
+                        data=generate_pdf_content("Study Guide", study_guide_text),
+                        file_name=f"study_guide_{st.session_state.get('current_video_id', 'video')}.pdf",
+                        mime="application/pdf"
+                    )
+                    
+                    st.markdown(f"**Overview:** {guide.get('overview', 'N/A')}")
+                    
+                    if guide.get('learning_objectives'):
+                        st.markdown("**Learning Objectives:**")
+                        for obj in guide['learning_objectives']:
+                            st.markdown(f"• {obj}")
+                    
+                    if guide.get('key_concepts'):
+                        st.markdown("**Key Concepts:**")
+                        for concept in guide['key_concepts']:
+                            if isinstance(concept, dict):
+                                st.markdown(f"• **{concept.get('term', 'Unknown')}**: {concept.get('definition', 'No definition')}")
+                            else:
+                                st.markdown(f"• {concept}")
             
             if st.session_state.get('flashcards'):
-                with st.expander("🎯 Flashcards", expanded=False):
-                    cards = st.session_state.flashcards
-                    if cards and len(cards) > 0 and not cards[0].get('error'):
-                        for i, card in enumerate(cards[:10]):  # Show first 10 cards
-                            with st.container():
-                                st.markdown(f"**Card {i+1}** ({card.get('difficulty', 'medium')})")
-                                st.markdown(f"**Q:** {card.get('question', 'No question')}")
-                                with st.expander("Show Answer"):
-                                    st.markdown(f"**A:** {card.get('answer', 'No answer')}")
-                    else:
-                        st.error("Failed to generate flashcards")
+                st.subheader("🎯 Flashcards")
+                cards = st.session_state.flashcards
+                if cards and len(cards) > 0 and not cards[0].get('error'):
+                    # Add download button for flashcards
+                    flashcard_text = generate_flashcard_text(cards)
+                    st.download_button(
+                        label="📄 Download Flashcards as PDF",
+                        data=generate_pdf_content("Flashcards", flashcard_text),
+                        file_name=f"flashcards_{st.session_state.get('current_video_id', 'video')}.pdf",
+                        mime="application/pdf"
+                    )
+                    
+                    # Initialize answer visibility state
+                    if 'show_answers' not in st.session_state:
+                        st.session_state.show_answers = {}
+                    
+                    # Display flashcards with persistent answer toggle
+                    for i, card in enumerate(cards[:10]):  # Show first 10 cards
+                        with st.container():
+                            st.markdown(f"**Card {i+1}** ({card.get('difficulty', 'medium')})")
+                            st.markdown(f"**Q:** {card.get('question', 'No question')}")
+                            
+                            # Toggle answer visibility
+                            answer_key = f"card_{i}"
+                            col1, col2 = st.columns([1, 4])
+                            with col1:
+                                if st.button("👁️ Answer", key=f"answer_{i}"):
+                                    st.session_state.show_answers[answer_key] = not st.session_state.show_answers.get(answer_key, False)
+                            
+                            if st.session_state.show_answers.get(answer_key, False):
+                                st.markdown(f"**A:** {card.get('answer', 'No answer')}")
+                            st.divider()
+                else:
+                    st.error("Failed to generate flashcards")
             
             if st.session_state.get('study_notes'):
                 with st.expander("📝 Quick Study Notes", expanded=False):
