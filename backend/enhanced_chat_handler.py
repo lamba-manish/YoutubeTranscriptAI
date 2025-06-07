@@ -130,3 +130,27 @@ class EnhancedChatHandler:
         Check if a video is currently loaded
         """
         return self.current_video_id is not None
+    
+    def get_highlight_reel(self, num_highlights: int = 5) -> str:
+        """
+        Get highlight reel for current video
+        """
+        if not self.current_video_id:
+            return "Please load a video first."
+        
+        return self.vector_manager.extract_highlight_reel(self.current_video_id, num_highlights)
+    
+    def get_video_mood_analysis(self) -> str:
+        """
+        Get mood and tone analysis for current video
+        """
+        if not self.current_video_id:
+            return "Please load a video first."
+        
+        return self.vector_manager.analyze_video_mood(self.current_video_id)
+    
+    def get_available_videos(self) -> list:
+        """
+        Get list of all available videos in database
+        """
+        return self.db_manager.get_all_videos()

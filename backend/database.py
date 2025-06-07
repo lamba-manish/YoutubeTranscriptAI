@@ -143,3 +143,16 @@ class DatabaseManager:
         with self.get_session() as session:
             result = session.query(VectorEmbedding).filter_by(video_id=video_id).first()
             return result is not None
+    
+    def get_all_videos(self) -> list:
+        """Get all videos from database with their metadata"""
+        with self.get_session() as session:
+            videos = session.query(VideoTranscript).order_by(VideoTranscript.created_at.desc()).all()
+            return [{
+                'video_id': video.video_id,
+                'title': video.title,
+                'channel': video.channel,
+                'duration': video.duration,
+                'thumbnail_url': video.thumbnail_url,
+                'created_at': video.created_at.strftime('%Y-%m-%d %H:%M') if video.created_at else 'Unknown'
+            } for video in videos]

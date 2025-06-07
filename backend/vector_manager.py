@@ -155,7 +155,11 @@ class VectorManager:
             result = qa_chain({"query": question})
             response = result["result"]
             
-            return response, context
+            # Add citations to response
+            citations = self._generate_citations(docs)
+            response_with_citations = f"{response}\n\n**Sources:**\n{citations}"
+            
+            return response_with_citations, context
             
         except Exception as e:
             print(f"Debug - Error querying transcript: {str(e)}")
@@ -242,3 +246,88 @@ class VectorManager:
         except Exception as e:
             print(f"Debug - Error generating summary: {str(e)}")
             return f"Sorry, I encountered an error while generating the summary: {str(e)}"
+    
+    def _generate_citations(self, docs) -> str:
+        """Generate citations from retrieved documents"""
+        citations = []
+        for i, doc in enumerate(docs, 1):
+            # Extract timestamp if available from metadata
+            timestamp = doc.metadata.get('timestamp', 'Unknown time')
+            preview = doc.page_content[:100] + "..." if len(doc.page_content) > 100 else doc.page_content
+            citations.append(f"[{i}] {timestamp}: \"{preview}\"")
+        
+        return "\n".join(citations)
+    
+    def extract_highlight_reel(self, video_id: str, num_highlights: int = 5) -> str:
+        """Extract key moments/highlights from the video transcript"""
+        try:
+            # Get video data
+            video_data = self.db_manager.get_video_transcript(video_id)
+            if not video_data:
+                return "No video transcript found."
+            
+            transcript_text = video_data.transcript_text
+            
+            highlight_prompt = f"""
+            Analyze this YouTube video transcript and extract {num_highlights} key highlights or important moments.
+            For each highlight, provide:
+            1. A brief title/description
+            2. The key quote or content
+            3. Why it's significant
+            
+            Video Title: {video_data.title or 'Unknown'}
+            
+            Transcript:
+            {transcript_text[:5000]}...
+            
+            Format your response as:
+            **Highlight 1: [Title]**
+            Quote: "[Key quote]"
+            Significance: [Why this moment is important]
+            
+            **Highlight 2: [Title]**
+            ...
+            """
+            
+            response = self.llm.invoke(highlight_prompt)
+            return response.content
+            
+        except Exception as e:
+            print(f"Debug - Error extracting highlights: {str(e)}")
+            return f"Error extracting highlights: {str(e)}"
+    
+    def analyze_video_mood(self, video_id: str) -> str:
+        """Analyze the overall mood and tone of the video"""
+        try:
+            # Get video data
+            video_data = self.db_manager.get_video_transcript(video_id)
+            if not video_data:
+                return "No video transcript found."
+            
+            transcript_text = video_data.transcript_text
+            
+            mood_prompt = f"""
+            Analyze the overall mood, tone, and emotional characteristics of this YouTube video based on its transcript.
+            
+            Video Title: {video_data.title or 'Unknown'}
+            Channel: {video_data.channel or 'Unknown'}
+            
+            Transcript:
+            {transcript_text[:4000]}...
+            
+            Please provide:
+            1. **Overall Mood**: (e.g., Educational, Entertaining, Serious, Humorous, Inspirational, etc.)
+            2. **Tone**: (e.g., Casual, Professional, Energetic, Calm, etc.)
+            3. **Emotional Characteristics**: What emotions does the content evoke?
+            4. **Target Audience Feel**: How would viewers likely feel watching this?
+            5. **Content Style**: (e.g., Tutorial, Commentary, Review, Storytelling, etc.)
+            
+            Provide a detailed analysis with specific examples from the transcript.
+            """
+            
+            response = self.llm.invoke(mood_prompt)
+            return response.content
+            
+        except Exception as e:
+            print(f"Debug - Error analyzing mood: {str(e)}")
+            return f"Error analyzing video mood: {str(e)}"
