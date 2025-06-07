@@ -418,7 +418,7 @@ def main():
             
             # Display thumbnail if available
             if video_info.get('thumbnail'):
-                st.image(video_info['thumbnail'], use_column_width=True)
+                st.image(video_info['thumbnail'], use_container_width=True)
             
             # Display video details with better formatting
             if video_info.get('title'):

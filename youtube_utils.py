@@ -1,14 +1,13 @@
 import re
 import requests
-from youtube_transcript_api import YouTubeTranscriptApi
-from youtube_transcript_api.formatters import TextFormatter
+from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled
 import streamlit as st
 
 class YouTubeTranscriptExtractor:
     """Utility class for extracting YouTube video transcripts and metadata"""
     
     def __init__(self):
-        self.formatter = TextFormatter()
+        pass
     
     def get_video_info(self, video_id):
         """
@@ -51,53 +50,21 @@ class YouTubeTranscriptExtractor:
                 'video_id': video_id
             }
     
-    def get_transcript(self, video_id, languages=['en', 'en-US', 'en-GB']):
+    def get_transcript(self, video_id, languages=['en']):
         """
-        Extract transcript from YouTube video
+        Extract transcript from YouTube video using the simplified approach
         Returns formatted transcript text or None if not available
         """
         try:
-            # Try to get transcript in preferred languages
-            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+            # Use the simple approach that works locally
+            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=languages)
             
-            # First try to find manual transcripts in preferred languages
-            for lang in languages:
-                try:
-                    transcript = transcript_list.find_transcript([lang])
-                    if not transcript.is_generated:
-                        return self._format_transcript(transcript.fetch())
-                except:
-                    continue
+            # Format the transcript with timestamps
+            return self._format_transcript(transcript_list)
             
-            # If no manual transcript found, try auto-generated in preferred languages
-            for lang in languages:
-                try:
-                    transcript = transcript_list.find_generated_transcript([lang])
-                    return self._format_transcript(transcript.fetch())
-                except:
-                    continue
-            
-            # If still no transcript found, try any available transcript
-            try:
-                transcript = transcript_list.find_transcript(['en'])
-                return self._format_transcript(transcript.fetch())
-            except:
-                pass
-            
-            # Last resort: try any available transcript
-            try:
-                available_transcripts = transcript_list._manually_created_transcripts
-                if not available_transcripts:
-                    available_transcripts = transcript_list._generated_transcripts
-                
-                if available_transcripts:
-                    first_transcript = list(available_transcripts.values())[0]
-                    return self._format_transcript(first_transcript.fetch())
-            except:
-                pass
-            
+        except TranscriptsDisabled:
+            st.error("No captions available for this video.")
             return None
-            
         except Exception as e:
             st.error(f"Error extracting transcript: {str(e)}")
             return None
@@ -111,13 +78,9 @@ class YouTubeTranscriptExtractor:
             formatted_text = ""
             
             for entry in transcript_data:
-                # Handle both dict and object formats
-                if hasattr(entry, 'start'):
-                    start_time = self._seconds_to_timestamp(entry.start)
-                    text = entry.text.strip()
-                else:
-                    start_time = self._seconds_to_timestamp(entry['start'])
-                    text = entry['text'].strip()
+                # YouTube transcript API returns dict format: {'text': '...', 'start': ..., 'duration': ...}
+                start_time = self._seconds_to_timestamp(entry['start'])
+                text = entry['text'].strip()
                 
                 # Clean up the text
                 text = re.sub(r'\s+', ' ', text)  # Normalize whitespace
@@ -129,7 +92,7 @@ class YouTubeTranscriptExtractor:
             return formatted_text.strip()
             
         except Exception as e:
-            st.error(f"Error formatting transcript: {str(e)}")
+            print(f"Error formatting transcript: {str(e)}")
             return None
     
     def _seconds_to_timestamp(self, seconds):
