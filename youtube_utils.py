@@ -1,5 +1,8 @@
 import re
 import requests
+import time
+import json
+from urllib.parse import unquote
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled
 import streamlit as st
 
@@ -52,22 +55,125 @@ class YouTubeTranscriptExtractor:
     
     def get_transcript(self, video_id, languages=['en']):
         """
-        Extract transcript from YouTube video using the simplified approach
+        Extract transcript using direct HTTP approach for better reliability
         Returns formatted transcript text or None if not available
         """
+        # First try the direct HTTP approach
+        transcript = self._get_transcript_direct(video_id)
+        if transcript:
+            return transcript
+            
+        # Fallback to youtube-transcript-api
         try:
-            # Use the simple approach that works locally
-            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=languages)
+            print(f"Debug - Fallback: Using youtube-transcript-api for {video_id}")
+            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=['en'])
             
-            # Format the transcript with timestamps
-            return self._format_transcript(transcript_list)
-            
+            if transcript_list and len(transcript_list) > 0:
+                print(f"Debug - Fallback success! Found {len(transcript_list)} segments")
+                return self._format_transcript(transcript_list)
+                
         except TranscriptsDisabled:
-            st.error("No captions available for this video.")
+            st.error("This video does not have captions available.")
             return None
         except Exception as e:
-            print(f"Debug - Error extracting transcript: {str(e)}")
-            st.error(f"Error extracting transcript: {str(e)}")
+            print(f"Debug - Fallback failed: {str(e)}")
+        
+        st.error("Could not extract transcript from this video. The video may not have captions available.")
+        return None
+    
+    def _get_transcript_direct(self, video_id):
+        """
+        Direct HTTP method to extract transcript from YouTube
+        """
+        try:
+            print(f"Debug - Trying direct HTTP approach for {video_id}")
+            
+            # Get the video page
+            video_url = f"https://www.youtube.com/watch?v={video_id}"
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            
+            response = requests.get(video_url, headers=headers, timeout=10)
+            if response.status_code != 200:
+                print(f"Debug - HTTP error: {response.status_code}")
+                return None
+            
+            content = response.text
+            
+            # Look for transcript data in the page
+            # YouTube embeds transcript URLs in the page source
+            transcript_pattern = r'"captionTracks":\s*\[([^\]]+)\]'
+            match = re.search(transcript_pattern, content)
+            
+            if not match:
+                print("Debug - No caption tracks found in page")
+                return None
+            
+            caption_data = match.group(1)
+            
+            # Extract the base URL for English captions
+            url_pattern = r'"baseUrl":"([^"]+)"[^}]*"languageCode":"en"'
+            url_match = re.search(url_pattern, caption_data)
+            
+            if not url_match:
+                print("Debug - No English caption URL found")
+                return None
+            
+            caption_url = url_match.group(1).replace('\\u0026', '&')
+            print(f"Debug - Found caption URL")
+            
+            # Fetch the actual transcript
+            caption_response = requests.get(caption_url, headers=headers, timeout=10)
+            if caption_response.status_code != 200:
+                print(f"Debug - Caption fetch error: {caption_response.status_code}")
+                return None
+            
+            return self._parse_xml_transcript(caption_response.text)
+            
+        except Exception as e:
+            print(f"Debug - Direct method error: {str(e)}")
+            return None
+    
+    def _parse_xml_transcript(self, xml_content):
+        """
+        Parse XML transcript content and format it
+        """
+        try:
+            # Simple regex parsing of XML transcript
+            text_pattern = r'<text start="([^"]+)"[^>]*>([^<]+)</text>'
+            matches = re.findall(text_pattern, xml_content)
+            
+            if not matches:
+                print("Debug - No text segments found in XML")
+                return None
+            
+            formatted_text = ""
+            for start_time, text in matches:
+                try:
+                    # Convert start time to readable format
+                    start_seconds = float(start_time)
+                    timestamp = self._seconds_to_timestamp(start_seconds)
+                    
+                    # Clean up the text
+                    clean_text = unquote(text).replace('&quot;', '"').replace('&amp;', '&')
+                    clean_text = re.sub(r'\s+', ' ', clean_text).strip()
+                    
+                    if clean_text:
+                        formatted_text += f"[{timestamp}] {clean_text}\n"
+                        
+                except Exception as e:
+                    print(f"Debug - Error parsing segment: {e}")
+                    continue
+            
+            if formatted_text:
+                print(f"Debug - Successfully parsed {len(matches)} transcript segments")
+                return formatted_text.strip()
+            
+            return None
+            
+        except Exception as e:
+            print(f"Debug - XML parsing error: {str(e)}")
             return None
     
     def _format_transcript(self, transcript_data):
