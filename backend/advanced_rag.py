@@ -6,10 +6,8 @@ import json
 import numpy as np
 from typing import List, Dict, Tuple, Optional
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.vectorstores import FAISS
-from langchain.llms import OpenAI
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_community.vectorstores import FAISS
 from langchain.schema import Document
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
@@ -84,69 +82,34 @@ ANSWER:""",
     
     def create_semantic_chunks(self, transcript_text: str, video_id: str) -> List[Document]:
         """Create semantically aware chunks with metadata"""
-        # Extract timestamp segments first
-        timestamp_segments = self.extract_timestamps(transcript_text)
+        # Use RecursiveCharacterTextSplitter for better chunking
+        docs = self.text_splitter.create_documents([transcript_text])
         
-        if not timestamp_segments:
-            # Fallback to regular chunking if no timestamps
-            docs = self.text_splitter.create_documents([transcript_text])
-            for i, doc in enumerate(docs):
-                doc.metadata = {
-                    'video_id': video_id,
-                    'chunk_id': i,
-                    'chunk_type': 'text',
-                    'timestamp': 'unknown'
-                }
-            return docs
-        
-        # Group segments into meaningful chunks
-        chunks = []
-        current_chunk = ""
-        current_timestamp = ""
-        chunk_timestamps = []
-        
-        for timestamp, content in timestamp_segments:
-            # If adding this content would exceed chunk size, finalize current chunk
-            if len(current_chunk + content) > 800 and current_chunk:
-                chunks.append({
-                    'content': current_chunk.strip(),
-                    'start_timestamp': chunk_timestamps[0] if chunk_timestamps else timestamp,
-                    'end_timestamp': chunk_timestamps[-1] if chunk_timestamps else timestamp,
-                    'timestamps': chunk_timestamps.copy()
-                })
-                current_chunk = ""
-                chunk_timestamps = []
-            
-            current_chunk += f"[{timestamp}] {content}\n"
-            chunk_timestamps.append(timestamp)
-        
-        # Add final chunk
-        if current_chunk:
-            chunks.append({
-                'content': current_chunk.strip(),
-                'start_timestamp': chunk_timestamps[0] if chunk_timestamps else "unknown",
-                'end_timestamp': chunk_timestamps[-1] if chunk_timestamps else "unknown",
-                'timestamps': chunk_timestamps.copy()
-            })
-        
-        # Convert to Document objects with rich metadata
+        # Extract timestamps for each chunk and add metadata
         documents = []
-        for i, chunk in enumerate(chunks):
-            doc = Document(
-                page_content=chunk['content'],
-                metadata={
-                    'video_id': video_id,
-                    'chunk_id': i,
-                    'chunk_type': 'timestamped',
-                    'start_timestamp': chunk['start_timestamp'],
-                    'end_timestamp': chunk['end_timestamp'],
-                    'timestamps': chunk['timestamps'],
-                    'word_count': len(chunk['content'].split()),
-                    'char_count': len(chunk['content'])
-                }
-            )
+        for i, doc in enumerate(docs):
+            # Extract timestamps from this chunk
+            timestamps = re.findall(r'\[(\d{1,2}:\d{2}(?::\d{2})?)\]', doc.page_content)
+            
+            # Get start and end timestamps
+            start_timestamp = timestamps[0] if timestamps else 'unknown'
+            end_timestamp = timestamps[-1] if timestamps else 'unknown'
+            
+            # Enhanced metadata
+            doc.metadata = {
+                'video_id': video_id,
+                'chunk_index': i,
+                'chunk_type': 'timestamped' if timestamps else 'text',
+                'start_timestamp': start_timestamp,
+                'end_timestamp': end_timestamp,
+                'timestamp_count': len(timestamps),
+                'word_count': len(doc.page_content.split()),
+                'char_count': len(doc.page_content)
+            }
+            
             documents.append(doc)
         
+        print(f"Advanced RAG - Created {len(documents)} chunks with metadata")
         return documents
     
     def expand_query(self, query: str) -> List[str]:
@@ -282,8 +245,7 @@ ANSWER:""",
             # Create FAISS index
             vector_store = FAISS.from_documents(
                 documents, 
-                self.embeddings,
-                metadatas=[doc.metadata for doc in documents]
+                self.embeddings
             )
             
             # Multi-query retrieval
