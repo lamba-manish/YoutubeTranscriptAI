@@ -1,6 +1,7 @@
 import streamlit as st
 import re
 import os
+import json
 from youtube_utils import YouTubeTranscriptExtractor
 from backend.enhanced_chat_handler import EnhancedChatHandler
 
@@ -673,6 +674,59 @@ def main():
             if st.session_state.get('video_mood'):
                 with st.expander("😊 Mood Analysis", expanded=False):
                     st.markdown(st.session_state.video_mood)
+            
+            # Study Guide Features
+            if st.session_state.get('study_guide'):
+                with st.expander("📚 Study Guide", expanded=False):
+                    guide = st.session_state.study_guide
+                    if guide.get('error'):
+                        st.error(guide['error'])
+                    else:
+                        st.markdown(f"**Overview:** {guide.get('overview', 'N/A')}")
+                        
+                        if guide.get('learning_objectives'):
+                            st.markdown("**Learning Objectives:**")
+                            for obj in guide['learning_objectives']:
+                                st.markdown(f"• {obj}")
+                        
+                        if guide.get('key_concepts'):
+                            st.markdown("**Key Concepts:**")
+                            for concept in guide['key_concepts']:
+                                if isinstance(concept, dict):
+                                    st.markdown(f"• **{concept.get('term', 'Unknown')}**: {concept.get('definition', 'No definition')}")
+                                else:
+                                    st.markdown(f"• {concept}")
+            
+            if st.session_state.get('flashcards'):
+                with st.expander("🎯 Flashcards", expanded=False):
+                    cards = st.session_state.flashcards
+                    if cards and len(cards) > 0 and not cards[0].get('error'):
+                        for i, card in enumerate(cards[:10]):  # Show first 10 cards
+                            with st.container():
+                                st.markdown(f"**Card {i+1}** ({card.get('difficulty', 'medium')})")
+                                st.markdown(f"**Q:** {card.get('question', 'No question')}")
+                                with st.expander("Show Answer"):
+                                    st.markdown(f"**A:** {card.get('answer', 'No answer')}")
+                    else:
+                        st.error("Failed to generate flashcards")
+            
+            if st.session_state.get('study_notes'):
+                with st.expander("📝 Quick Study Notes", expanded=False):
+                    notes = st.session_state.study_notes
+                    if notes.get('error'):
+                        st.error(notes['error'])
+                    else:
+                        st.markdown(f"**Summary:** {notes.get('summary', 'N/A')}")
+                        
+                        if notes.get('key_points'):
+                            st.markdown("**Key Points:**")
+                            for point in notes['key_points']:
+                                st.markdown(f"• {point}")
+                        
+                        if notes.get('actionable_items'):
+                            st.markdown("**Action Items:**")
+                            for item in notes['actionable_items']:
+                                st.markdown(f"✓ {item}")
             
             # Chat history counter
             if st.session_state.chat_history:

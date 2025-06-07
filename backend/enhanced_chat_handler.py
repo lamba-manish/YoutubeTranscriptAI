@@ -5,6 +5,7 @@ import os
 from backend.database import DatabaseManager
 from backend.vector_manager import VectorManager
 from backend.evaluation_system import ResponseEvaluator
+from backend.study_guide_generator import StudyGuideGenerator
 import streamlit as st
 
 class EnhancedChatHandler:
@@ -14,6 +15,7 @@ class EnhancedChatHandler:
         self.db_manager = DatabaseManager()
         self.vector_manager = VectorManager(self.db_manager)
         self.evaluator = ResponseEvaluator()
+        self.study_guide_generator = StudyGuideGenerator()
         self.current_video_id = None
         self.current_video_info = None
     
@@ -154,3 +156,79 @@ class EnhancedChatHandler:
         Get list of all available videos in database
         """
         return self.db_manager.get_all_videos()
+    
+    def generate_study_guide(self) -> dict:
+        """
+        Generate comprehensive study guide for current video
+        """
+        if not self.current_video_id or not self.current_video_info:
+            return {"error": "No video loaded"}
+        
+        try:
+            video_data = self.db_manager.get_video_transcript(self.current_video_id)
+            if not video_data:
+                return {"error": "Video transcript not found"}
+            
+            transcript_text = video_data.get('transcript', video_data.get('transcript_text', ''))
+            return self.study_guide_generator.generate_comprehensive_study_guide(
+                self.current_video_id, transcript_text, self.current_video_info
+            )
+        except Exception as e:
+            return {"error": f"Failed to generate study guide: {str(e)}"}
+    
+    def generate_study_notes(self) -> dict:
+        """
+        Generate quick study notes for current video
+        """
+        if not self.current_video_id or not self.current_video_info:
+            return {"error": "No video loaded"}
+        
+        try:
+            video_data = self.db_manager.get_video_transcript(self.current_video_id)
+            if not video_data:
+                return {"error": "Video transcript not found"}
+            
+            transcript_text = video_data.get('transcript', video_data.get('transcript_text', ''))
+            return self.study_guide_generator.generate_quick_study_notes(
+                self.current_video_id, transcript_text, self.current_video_info
+            )
+        except Exception as e:
+            return {"error": f"Failed to generate study notes: {str(e)}"}
+    
+    def generate_flashcards(self, num_cards: int = 15) -> list:
+        """
+        Generate flashcards for current video
+        """
+        if not self.current_video_id or not self.current_video_info:
+            return [{"error": "No video loaded"}]
+        
+        try:
+            video_data = self.db_manager.get_video_transcript(self.current_video_id)
+            if not video_data:
+                return [{"error": "Video transcript not found"}]
+            
+            transcript_text = video_data.get('transcript', video_data.get('transcript_text', ''))
+            return self.study_guide_generator.generate_flashcards(
+                self.current_video_id, transcript_text, self.current_video_info, num_cards
+            )
+        except Exception as e:
+            return [{"error": f"Failed to generate flashcards: {str(e)}"}]
+    
+    def generate_learning_path(self) -> dict:
+        """
+        Generate learning path for current video
+        """
+        if not self.current_video_id or not self.current_video_info:
+            return {"error": "No video loaded"}
+        
+        try:
+            video_data = self.db_manager.get_video_transcript(self.current_video_id)
+            if not video_data:
+                return {"error": "Video transcript not found"}
+            
+            transcript_text = video_data.get('transcript', video_data.get('transcript_text', ''))
+            return self.study_guide_generator.generate_learning_path(
+                self.current_video_id, transcript_text, self.current_video_info
+            )
+        except Exception as e:
+            return {"error": f"Failed to generate learning path: {str(e)}"}
