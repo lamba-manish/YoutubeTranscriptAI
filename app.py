@@ -366,18 +366,20 @@ def main():
     with st.sidebar:
         st.header("📹 Video Input")
         
-        # Video URL/ID input
+        # Video ID input
         video_input = st.text_input(
-            "YouTube URL or Video ID",
-            placeholder="https://youtube.com/watch?v=... or video_id",
-            help="Enter a YouTube video URL or just the video ID"
+            "YouTube Video ID",
+            placeholder="dQw4w9WgXcQ",
+            help="Enter an 11-character YouTube video ID (found in the URL after v=)"
         )
         
         if st.button("Load Video", type="primary"):
             if video_input:
-                video_id = extract_video_id(video_input)
+                # Clean the input and validate it's a proper video ID
+                video_id = video_input.strip()
                 
-                if video_id:
+                # Basic validation for YouTube video ID format
+                if len(video_id) == 11 and re.match(r'^[a-zA-Z0-9_-]{11}$', video_id):
                     with st.spinner("Extracting transcript..."):
                         extractor = YouTubeTranscriptExtractor()
                         
@@ -394,14 +396,15 @@ def main():
                                 st.success("✅ Video loaded successfully!")
                                 st.rerun()
                             else:
-                                st.error("❌ Could not extract transcript from this video.")
+                                st.error("❌ Could not extract transcript from this video. Make sure the video has captions available.")
                                 
                         except Exception as e:
                             st.error(f"❌ Error loading video: {str(e)}")
+                            st.info("💡 Try a different video ID or make sure the video has captions available.")
                 else:
-                    st.error("❌ Invalid YouTube URL or video ID")
+                    st.error("❌ Please enter a valid 11-character YouTube video ID")
             else:
-                st.warning("⚠️ Please enter a YouTube URL or video ID")
+                st.warning("⚠️ Please enter a YouTube video ID")
         
         # Display video information with modern card design
         if st.session_state.video_info:
@@ -494,8 +497,8 @@ def main():
                 <div style='display: flex; align-items: center; margin: 1rem 0; padding: 1rem; background-color: #1a1a1a; border-radius: 8px; border-left: 4px solid #FF0000;'>
                     <div style='font-size: 1.5rem; margin-right: 1rem;'>1️⃣</div>
                     <div>
-                        <strong style='color: #FFFFFF;'>Enter a YouTube URL or Video ID</strong><br>
-                        <span style='color: #AAAAAA;'>Paste any YouTube link in the sidebar input field</span>
+                        <strong style='color: #FFFFFF;'>Enter a YouTube Video ID</strong><br>
+                        <span style='color: #AAAAAA;'>Enter the 11-character video ID (e.g., dQw4w9WgXcQ)</span>
                     </div>
                 </div>
                 
@@ -544,6 +547,23 @@ def main():
                 <div style='background-color: #1a1a1a; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;'>
                     <strong style='color: #FFC107;'>🔄 Chat Memory</strong><br>
                     <span style='color: #AAAAAA; font-size: 0.9rem;'>Maintains conversation history and context</span>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("### 🎯 Try These Video IDs")
+            
+            example_videos = [
+                {"id": "dQw4w9WgXcQ", "title": "Rick Astley - Never Gonna Give You Up", "note": "Classic music video"},
+                {"id": "9bZkp7q19f0", "title": "TED Talk example", "note": "Educational content"},
+                {"id": "fJ9rUzIMcZQ", "title": "Science video", "note": "Informational content"}
+            ]
+            
+            for video in example_videos:
+                st.markdown(f"""
+                <div style='background-color: #1a1a1a; padding: 1rem; border-radius: 8px; margin: 0.5rem 0; border-left: 3px solid #FF0000;'>
+                    <div style='color: #FFFFFF; font-weight: bold; margin-bottom: 0.3rem;'>{video['title']}</div>
+                    <div style='color: #065FD4; font-family: monospace; font-size: 1.1rem; margin-bottom: 0.3rem;'>{video['id']}</div>
+                    <div style='color: #AAAAAA; font-size: 0.9rem;'>{video['note']}</div>
                 </div>
                 """, unsafe_allow_html=True)
             

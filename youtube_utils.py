@@ -111,8 +111,13 @@ class YouTubeTranscriptExtractor:
             formatted_text = ""
             
             for entry in transcript_data:
-                start_time = self._seconds_to_timestamp(entry['start'])
-                text = entry['text'].strip()
+                # Handle both dict and object formats
+                if hasattr(entry, 'start'):
+                    start_time = self._seconds_to_timestamp(entry.start)
+                    text = entry.text.strip()
+                else:
+                    start_time = self._seconds_to_timestamp(entry['start'])
+                    text = entry['text'].strip()
                 
                 # Clean up the text
                 text = re.sub(r'\s+', ' ', text)  # Normalize whitespace
