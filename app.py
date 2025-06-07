@@ -392,6 +392,10 @@ def main():
                                     if success:
                                         st.session_state.current_video_loaded = True
                                         st.session_state.chat_history = []
+                                        # Clear previous video features
+                                        st.session_state.video_summary = None
+                                        st.session_state.video_highlights = None
+                                        st.session_state.video_mood = None
                                         st.session_state.show_saved_videos = False
                                         st.rerun()
                             st.divider()
@@ -424,6 +428,10 @@ def main():
                             if success:
                                 st.session_state.current_video_loaded = True
                                 st.session_state.chat_history = []  # Reset chat history
+                                # Clear previous video features
+                                st.session_state.video_summary = None
+                                st.session_state.video_highlights = None
+                                st.session_state.video_mood = None
                                 st.rerun()
                         else:
                             # Extract new transcript

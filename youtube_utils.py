@@ -63,14 +63,45 @@ class YouTubeTranscriptExtractor:
         if transcript:
             return transcript
             
-        # Fallback to youtube-transcript-api
+        # Fallback to youtube-transcript-api with multi-language support
         try:
             print(f"Debug - Fallback: Using youtube-transcript-api for {video_id}")
-            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=['en'])
             
-            if transcript_list and len(transcript_list) > 0:
-                print(f"Debug - Fallback success! Found {len(transcript_list)} segments")
-                return self._format_transcript(transcript_list)
+            # Try to get available transcripts
+            transcript_list_data = YouTubeTranscriptApi.list_transcripts(video_id)
+            
+            # First try English
+            try:
+                transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=['en'])
+                if transcript_list and len(transcript_list) > 0:
+                    print(f"Debug - Found English transcript with {len(transcript_list)} segments")
+                    return self._format_transcript(transcript_list)
+            except:
+                pass
+            
+            # If English not available, try other languages and translate
+            for transcript in transcript_list_data:
+                try:
+                    if transcript.language_code != 'en' and transcript.is_translatable:
+                        # Get transcript and translate to English
+                        translated_transcript = transcript.translate('en').fetch()
+                        if translated_transcript and len(translated_transcript) > 0:
+                            print(f"Debug - Found {transcript.language} transcript, translated to English with {len(translated_transcript)} segments")
+                            return self._format_transcript(translated_transcript)
+                except Exception as translate_error:
+                    print(f"Debug - Translation failed for {transcript.language_code}: {translate_error}")
+                    continue
+            
+            # If translation fails, try original language
+            for transcript in transcript_list_data:
+                try:
+                    original_transcript = transcript.fetch()
+                    if original_transcript and len(original_transcript) > 0:
+                        print(f"Debug - Using original {transcript.language} transcript with {len(original_transcript)} segments")
+                        return self._format_transcript(original_transcript)
+                except Exception as orig_error:
+                    print(f"Debug - Original transcript failed for {transcript.language_code}: {orig_error}")
+                    continue
                 
         except TranscriptsDisabled:
             st.error("This video does not have captions available.")
