@@ -318,6 +318,8 @@ if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 if 'enhanced_chat_handler' not in st.session_state:
     st.session_state.enhanced_chat_handler = EnhancedChatHandler()
+if 'video_loaded' not in st.session_state:
+    st.session_state.video_loaded = False
 if 'current_video_loaded' not in st.session_state:
     st.session_state.current_video_loaded = False
 
@@ -448,6 +450,61 @@ def main():
                 st.markdown(f"<p style='color: #00FF00; margin-top: -10px;'>✓ Stored with vector embeddings</p>", unsafe_allow_html=True)
                 
                 st.markdown('</div>', unsafe_allow_html=True)
+                
+                # Feature buttons
+                st.divider()
+                st.header("🚀 Features")
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("📋 Summary", use_container_width=True):
+                        with st.spinner("Generating summary..."):
+                            summary = st.session_state.enhanced_chat_handler.get_video_summary()
+                            st.session_state.video_summary = summary
+                    
+                    if st.button("🎬 Highlights", use_container_width=True):
+                        with st.spinner("Extracting highlights..."):
+                            highlights = st.session_state.enhanced_chat_handler.get_highlight_reel()
+                            st.session_state.video_highlights = highlights
+                
+                with col2:
+                    if st.button("😊 Mood Analysis", use_container_width=True):
+                        with st.spinner("Analyzing mood..."):
+                            mood = st.session_state.enhanced_chat_handler.get_video_mood_analysis()
+                            st.session_state.video_mood = mood
+                    
+                    if st.button("📚 Video History", use_container_width=True):
+                        st.session_state.show_history = True
+                
+                # Display history if requested
+                if st.session_state.get('show_history', False):
+                    st.divider()
+                    st.header("📚 Available Videos")
+                    available_videos = st.session_state.enhanced_chat_handler.get_available_videos()
+                    
+                    if available_videos:
+                        for video in available_videos:
+                            with st.container():
+                                st.markdown(f"**{video['title'][:50]}...**" if len(video['title']) > 50 else f"**{video['title']}**")
+                                st.markdown(f"*{video['channel']} • {video['created_at']}*")
+                                
+                                if st.button(f"Load {video['video_id']}", key=f"load_{video['video_id']}", use_container_width=True):
+                                    with st.spinner("Loading video..."):
+                                        success = st.session_state.enhanced_chat_handler.load_video(video['video_id'])
+                                        if success:
+                                            st.session_state.current_video_loaded = True
+                                            st.session_state.chat_history = []
+                                            st.session_state.show_history = False
+                                            st.rerun()
+                                st.markdown("---")
+                    else:
+                        st.info("No videos in database yet. Load a video first!")
+                    
+                    if st.button("Hide History", use_container_width=True):
+                        st.session_state.show_history = False
+                        st.rerun()
+                
+                st.markdown('</div>', unsafe_allow_html=True)
     
     # Main chat interface
     col1, col2 = st.columns([3, 1])
@@ -536,37 +593,54 @@ def main():
                 st.markdown("""
                 <div style='background-color: #1a1a1a; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;'>
                     <strong style='color: #FF0000;'>🎯 Smart Context</strong><br>
-                    <span style='color: #AAAAAA; font-size: 0.9rem;'>AI understands the full video content and context</span>
+                    <span style='color: #AAAAAA; font-size: 0.9rem;'>AI understands the full video content and context with citations</span>
                 </div>
                 
                 <div style='background-color: #1a1a1a; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;'>
-                    <strong style='color: #065FD4;'>📊 Video Analytics</strong><br>
-                    <span style='color: #AAAAAA; font-size: 0.9rem;'>View video details, thumbnails, and transcript stats</span>
+                    <strong style='color: #065FD4;'>📊 Response Quality</strong><br>
+                    <span style='color: #AAAAAA; font-size: 0.9rem;'>Faithfulness and quality metrics for every response</span>
                 </div>
                 """, unsafe_allow_html=True)
             
             with col_b:
                 st.markdown("""
                 <div style='background-color: #1a1a1a; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;'>
-                    <strong style='color: #00FF00;'>💬 Natural Chat</strong><br>
-                    <span style='color: #AAAAAA; font-size: 0.9rem;'>Ask questions in plain English, get detailed answers</span>
+                    <strong style='color: #FF0000;'>🎬 Highlight Reel</strong><br>
+                    <span style='color: #AAAAAA; font-size: 0.9rem;'>Extract key moments and important insights</span>
                 </div>
                 
                 <div style='background-color: #1a1a1a; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;'>
-                    <strong style='color: #FFC107;'>🔄 Chat Memory</strong><br>
-                    <span style='color: #AAAAAA; font-size: 0.9rem;'>Maintains conversation history and context</span>
+                    <strong style='color: #065FD4;'>😊 Mood Analysis</strong><br>
+                    <span style='color: #AAAAAA; font-size: 0.9rem;'>Analyze video tone and emotional characteristics</span>
                 </div>
                 """, unsafe_allow_html=True)
             
-            st.markdown("### 🎯 Try These Video IDs")
+            st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Feature panels
+    with col2:
+        if st.session_state.current_video_loaded:
+            # Feature display panels
+            if st.session_state.get('video_summary'):
+                with st.expander("📋 Video Summary", expanded=False):
+                    st.markdown(st.session_state.video_summary)
             
-            example_videos = [
-                {"id": "Gfr50f6ZBvo", "title": "Podcast Interview", "note": "Long-form conversation"},
-                {"id": "dQw4w9WgXcQ", "title": "Rick Astley - Never Gonna Give You Up", "note": "Classic music video"},
-                {"id": "9bZkp7q19f0", "title": "TED Talk example", "note": "Educational content"}
-            ]
+            if st.session_state.get('video_highlights'):
+                with st.expander("🎬 Highlight Reel", expanded=False):
+                    st.markdown(st.session_state.video_highlights)
             
-            for video in example_videos:
+            if st.session_state.get('video_mood'):
+                with st.expander("😊 Mood Analysis", expanded=False):
+                    st.markdown(st.session_state.video_mood)
+            
+            # Chat history counter
+            if st.session_state.chat_history:
+                st.markdown('<div class="chat-counter">', unsafe_allow_html=True)
+                st.markdown(f"💬 **{len(st.session_state.chat_history)//2}** exchanges")
+                st.markdown('</div>', unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    main()
                 st.markdown(f"""
                 <div style='background-color: #1a1a1a; padding: 1rem; border-radius: 8px; margin: 0.5rem 0; border-left: 3px solid #FF0000;'>
                     <div style='color: #FFFFFF; font-weight: bold; margin-bottom: 0.3rem;'>{video['title']}</div>
