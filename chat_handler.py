@@ -1,4 +1,5 @@
 import os
+import re
 from openai import OpenAI
 import streamlit as st
 
@@ -6,6 +7,7 @@ class ChatHandler:
     """Handles AI-powered conversations about YouTube video transcripts"""
     
     def __init__(self, transcript, video_info):
+        self.full_transcript = transcript  # Keep full transcript for searching
         self.transcript = transcript
         self.video_info = video_info
         
@@ -30,6 +32,21 @@ class ChatHandler:
         video_title = self.video_info.get('title', 'Unknown Video')
         video_channel = self.video_info.get('channel', 'Unknown Channel')
         
+        # Calculate transcript length and chunk if necessary
+        transcript_text = self.transcript
+        max_transcript_length = 15000  # Conservative limit to avoid token issues
+        
+        if len(transcript_text) > max_transcript_length:
+            print(f"Debug - Transcript too long ({len(transcript_text)} chars), chunking...")
+            # Keep first part and last part of transcript for context
+            chunk_size = max_transcript_length // 2
+            transcript_text = (
+                transcript_text[:chunk_size] + 
+                "\n\n[... MIDDLE SECTION TRUNCATED FOR BREVITY ...]\n\n" + 
+                transcript_text[-chunk_size:]
+            )
+            print(f"Debug - Chunked transcript to {len(transcript_text)} chars")
+        
         system_prompt = f"""You are an AI assistant specialized in discussing YouTube video content. 
 
 VIDEO INFORMATION:
@@ -37,38 +54,115 @@ VIDEO INFORMATION:
 - Channel: {video_channel}
 - Video ID: {self.video_info.get('video_id', 'Unknown')}
 
-You have access to the complete transcript of this video. Use this transcript to answer questions accurately and provide specific information about what was discussed in the video.
+You have access to the transcript of this video. Use this transcript to answer questions accurately and provide specific information about what was discussed in the video.
 
 TRANSCRIPT:
-{self.transcript}
+{transcript_text}
 
 INSTRUCTIONS:
-1. Answer questions based solely on the video transcript content
+1. Answer questions based on the video transcript content provided
 2. Provide specific quotes or references when possible
 3. Include timestamps when mentioning specific parts of the video
-4. If asked about something not covered in the transcript, clearly state that
+4. If asked about something not covered in the transcript excerpt, mention that you have access to a portion of the transcript
 5. Be conversational and helpful while staying accurate to the content
 6. When discussing time-based content, reference the timestamps from the transcript
 7. Summarize or explain complex topics from the video in an accessible way
 8. If asked for specific quotes, provide them exactly as they appear in the transcript
 
-Remember: Your knowledge is limited to what's in this video transcript. Don't add information from your general knowledge that wasn't mentioned in the video."""
+Remember: Your knowledge is based on this video transcript. Focus on the content that was actually discussed in the video."""
 
         return system_prompt
     
+    def _find_relevant_transcript_sections(self, question, max_chars=8000):
+        """
+        Find relevant sections of transcript based on the question
+        """
+        question_lower = question.lower()
+        lines = self.full_transcript.split('\n')
+        relevant_lines = []
+        
+        # Keywords from the question
+        keywords = re.findall(r'\b\w+\b', question_lower)
+        keywords = [k for k in keywords if len(k) > 3]  # Filter short words
+        
+        # Score each line based on keyword matches
+        scored_lines = []
+        for i, line in enumerate(lines):
+            score = 0
+            line_lower = line.lower()
+            
+            for keyword in keywords:
+                if keyword in line_lower:
+                    score += line_lower.count(keyword)
+            
+            if score > 0:
+                # Include some context around matching lines
+                start = max(0, i-2)
+                end = min(len(lines), i+3)
+                context = '\n'.join(lines[start:end])
+                scored_lines.append((score, context))
+        
+        # Sort by relevance and combine top sections
+        scored_lines.sort(reverse=True, key=lambda x: x[0])
+        
+        combined_text = ""
+        used_texts = set()
+        
+        for score, text in scored_lines[:10]:  # Top 10 relevant sections
+            if text not in used_texts and len(combined_text + text) < max_chars:
+                combined_text += text + "\n\n"
+                used_texts.add(text)
+        
+        # If no relevant sections found, use beginning and end
+        if not combined_text:
+            chunk_size = max_chars // 2
+            combined_text = (
+                self.full_transcript[:chunk_size] + 
+                "\n\n[... MIDDLE SECTION OMITTED ...]\n\n" + 
+                self.full_transcript[-chunk_size:]
+            )
+        
+        return combined_text.strip()
+
     def get_response(self, user_question, chat_history=None):
         """
-        Generate AI response based on the video transcript and chat history
+        Generate AI response based on relevant transcript sections and chat history
         """
         try:
+            # Find relevant transcript sections for this specific question
+            relevant_transcript = self._find_relevant_transcript_sections(user_question)
+            
+            # Create a focused system prompt with relevant content
+            video_title = self.video_info.get('title', 'Unknown Video')
+            video_channel = self.video_info.get('channel', 'Unknown Channel')
+            
+            focused_prompt = f"""You are an AI assistant specialized in discussing YouTube video content.
+
+VIDEO INFORMATION:
+- Title: {video_title}
+- Channel: {video_channel}
+- Video ID: {self.video_info.get('video_id', 'Unknown')}
+
+RELEVANT TRANSCRIPT SECTIONS:
+{relevant_transcript}
+
+INSTRUCTIONS:
+1. Answer questions based on the transcript content provided
+2. Provide specific quotes with timestamps when possible
+3. If the answer requires information not in these sections, mention that you would need to see more of the transcript
+4. Be conversational and helpful while staying accurate to the content
+5. Reference timestamps from the transcript when discussing specific moments
+
+Remember: Focus on what's actually discussed in the provided transcript sections."""
+            
             # Prepare messages for the API call
             messages = [
-                {"role": "system", "content": self.system_prompt}
+                {"role": "system", "content": focused_prompt}
             ]
             
-            # Add chat history if provided
+            # Add recent chat history if provided
             if chat_history:
-                for msg in chat_history[-10:]:  # Limit to last 10 messages for context
+                for msg in chat_history[-5:]:  # Limit to last 5 messages for context
                     messages.append({
                         "role": msg["role"],
                         "content": msg["content"]
