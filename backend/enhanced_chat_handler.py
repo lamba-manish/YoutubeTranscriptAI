@@ -4,6 +4,7 @@ Enhanced chat handler using LangChain and vector embeddings
 import os
 from backend.database import DatabaseManager
 from backend.vector_manager import VectorManager
+from backend.advanced_rag import AdvancedRAGSystem
 from backend.evaluation_system import ResponseEvaluator
 from backend.study_guide_generator import StudyGuideGenerator
 import streamlit as st
@@ -13,7 +14,8 @@ class EnhancedChatHandler:
     
     def __init__(self):
         self.db_manager = DatabaseManager()
-        self.vector_manager = VectorManager(self.db_manager)
+        self.vector_manager = VectorManager(self.db_manager)  # Keep for study tools
+        self.advanced_rag = AdvancedRAGSystem(self.db_manager)  # Use for chat
         self.evaluator = ResponseEvaluator()
         self.study_guide_generator = StudyGuideGenerator()
         self.current_video_id = None
@@ -60,7 +62,7 @@ class EnhancedChatHandler:
                                 session.query(VectorEmbedding).filter_by(video_id=video_id).delete()
                                 session.commit()
                         
-                        success = self.vector_manager.process_video_transcript(
+                        success = self.advanced_rag.process_video_transcript(
                             video_id, video_data['transcript_text'], self.current_video_info
                         )
                         if not success:
@@ -118,8 +120,8 @@ class EnhancedChatHandler:
                     if not success:
                         return "Chat functionality is currently unavailable. Vector embeddings could not be generated for this video."
             
-            # Get AI response using vector search
-            response, context = self.vector_manager.query_transcript_with_context(
+            # Get AI response using advanced RAG system
+            response, context, sources = self.advanced_rag.retrieve_and_answer(
                 self.current_video_id, 
                 user_question
             )
