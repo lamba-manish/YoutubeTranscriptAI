@@ -111,9 +111,10 @@ class VectorManager:
                 embeddings_list.append(item['embedding'])
             
             # Create FAISS vector store
-            vector_store = FAISS.from_embeddings(
-                text_embeddings=[(doc.page_content, emb) for doc, emb in zip(documents, embeddings_list)],
-                embedding=self.embeddings
+            vector_store = FAISS.from_texts(
+                texts=[doc.page_content for doc in documents],
+                embedding=self.embeddings,
+                metadatas=[doc.metadata for doc in documents]
             )
             
             print(f"Debug - Created FAISS vector store with {len(documents)} documents")
@@ -123,6 +124,43 @@ class VectorManager:
             print(f"Debug - Error creating vector store: {str(e)}")
             return None
     
+    def query_transcript_with_context(self, video_id: str, question: str, k: int = 4) -> tuple[str, str]:
+        """
+        Query transcript using vector similarity search and return both response and context
+        """
+        try:
+            # Create vector store
+            vector_store = self.create_vector_store(video_id)
+            if not vector_store:
+                return "No vector embeddings found for this video.", ""
+            
+            # Perform similarity search
+            docs = vector_store.similarity_search(question, k=k)
+            
+            if not docs:
+                return "No relevant content found for your question.", ""
+            
+            # Combine retrieved documents
+            context = "\n\n".join([doc.page_content for doc in docs])
+            
+            # Create QA chain
+            qa_chain = RetrievalQA.from_chain_type(
+                llm=self.llm,
+                chain_type="stuff",
+                retriever=vector_store.as_retriever(search_kwargs={"k": k}),
+                return_source_documents=True
+            )
+            
+            # Get response
+            result = qa_chain({"query": question})
+            response = result["result"]
+            
+            return response, context
+            
+        except Exception as e:
+            print(f"Debug - Error querying transcript: {str(e)}")
+            return f"Error processing your question: {str(e)}", ""
+
     def query_transcript(self, video_id: str, question: str, k: int = 4) -> str:
         """
         Query transcript using vector similarity search
