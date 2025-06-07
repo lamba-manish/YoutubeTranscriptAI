@@ -40,10 +40,26 @@ class EnhancedChatHandler:
                     'thumbnail': video_data['thumbnail']
                 }
                 
-                # Check if embeddings exist, generate if missing
-                if not self.db_manager.embeddings_exist(video_id):
+                # Check embeddings quality and regenerate if needed
+                embeddings_data = self.db_manager.get_embeddings(video_id)
+                should_regenerate = False
+                
+                if not embeddings_data:
                     print(f"Debug - No embeddings found for {video_id}, generating...")
-                    with st.spinner("Generating embeddings for AI chat..."):
+                    should_regenerate = True
+                elif len(embeddings_data) < 5:  # Poor chunking quality
+                    print(f"Debug - Low quality embeddings ({len(embeddings_data)} chunks) for {video_id}, regenerating...")
+                    should_regenerate = True
+                
+                if should_regenerate:
+                    with st.spinner("Generating high-quality embeddings for AI chat..."):
+                        # Clear existing poor quality embeddings
+                        if embeddings_data:
+                            from backend.database import VectorEmbedding
+                            with self.db_manager.get_session() as session:
+                                session.query(VectorEmbedding).filter_by(video_id=video_id).delete()
+                                session.commit()
+                        
                         success = self.vector_manager.process_video_transcript(
                             video_id, video_data['transcript_text'], self.current_video_info
                         )

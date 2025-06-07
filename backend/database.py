@@ -99,7 +99,7 @@ class DatabaseManager:
                     'channel': result.channel,
                     'duration': result.duration,
                     'thumbnail': result.thumbnail_url,
-                    'transcript': result.transcript_text,
+                    'transcript_text': result.transcript_text,
                     'created_at': result.created_at,
                     'updated_at': result.updated_at
                 }

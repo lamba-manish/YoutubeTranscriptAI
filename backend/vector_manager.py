@@ -21,25 +21,30 @@ class VectorManager:
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
         self.llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.2)
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000, 
-            chunk_overlap=200
+            chunk_size=500,  # Smaller chunks for better granularity
+            chunk_overlap=100,  # Reasonable overlap
+            separators=["\n\n", "\n", ". ", " ", ""],  # Better splitting on natural boundaries
+            length_function=len
         )
         
         # Create prompt template for QA
         self.prompt_template = PromptTemplate(
-            template="""
-            You are a helpful assistant analyzing YouTube video content.
-            Answer ONLY from the provided transcript context.
-            If the context is insufficient, say you don't have enough information.
-            Always include timestamps when available in your response.
+            template="""You are an expert video content analyzer. Use ONLY the provided transcript context to answer questions.
 
-            Context from video transcript:
-            {context}
-            
-            Question: {question}
-            
-            Answer:
-            """,
+CONTEXT from video transcript:
+{context}
+
+QUESTION: {question}
+
+INSTRUCTIONS:
+- Answer based strictly on the transcript content provided above
+- Include specific timestamps when they appear in the context
+- If asking about lyrics, quotes, or specific content, provide the exact text from the transcript
+- If the context doesn't contain enough information, clearly state what information is missing
+- Be specific and detailed when the transcript provides the information
+- For song lyrics, provide the complete text as it appears in the transcript
+
+ANSWER:""",
             input_variables=['context', 'question']
         )
     
@@ -143,12 +148,19 @@ class VectorManager:
             # Combine retrieved documents
             context = "\n\n".join([doc.page_content for doc in docs])
             
-            # Create QA chain
+            # Create QA chain with improved retrieval parameters
             qa_chain = RetrievalQA.from_chain_type(
                 llm=self.llm,
                 chain_type="stuff",
-                retriever=vector_store.as_retriever(search_kwargs={"k": k}),
-                return_source_documents=True
+                retriever=vector_store.as_retriever(
+                    search_type="similarity_score_threshold",
+                    search_kwargs={
+                        "k": k * 2,  # Retrieve more documents initially
+                        "score_threshold": 0.3  # Lower threshold for more inclusive search
+                    }
+                ),
+                return_source_documents=True,
+                chain_type_kwargs={"prompt": self.prompt_template}
             )
             
             # Get response
