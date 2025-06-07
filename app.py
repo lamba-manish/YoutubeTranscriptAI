@@ -623,34 +623,20 @@ def main():
             
             st.markdown("### How to Get Started")
             
-            # Step-by-step guide with better styling
-            st.markdown("""
-            <div style='margin: 1.5rem 0;'>
-                <div style='display: flex; align-items: center; margin: 1rem 0; padding: 1rem; background-color: #1a1a1a; border-radius: 8px; border-left: 4px solid #FF0000;'>
-                    <div style='font-size: 1.5rem; margin-right: 1rem;'>1️⃣</div>
-                    <div>
-                        <strong style='color: #FFFFFF;'>Enter a YouTube Video ID</strong><br>
-                        <span style='color: #AAAAAA;'>Enter the 11-character video ID (e.g., dQw4w9WgXcQ)</span>
-                    </div>
-                </div>
-                
-                <div style='display: flex; align-items: center; margin: 1rem 0; padding: 1rem; background-color: #1a1a1a; border-radius: 8px; border-left: 4px solid #065FD4;'>
-                    <div style='font-size: 1.5rem; margin-right: 1rem;'>2️⃣</div>
-                    <div>
-                        <strong style='color: #FFFFFF;'>Load the Video</strong><br>
-                        <span style='color: #AAAAAA;'>Click "Load Video" to extract the transcript automatically</span>
-                    </div>
-                </div>
-                
-                <div style='display: flex; align-items: center; margin: 1rem 0; padding: 1rem; background-color: #1a1a1a; border-radius: 8px; border-left: 4px solid #00FF00;'>
-                    <div style='font-size: 1.5rem; margin-right: 1rem;'>3️⃣</div>
-                    <div>
-                        <strong style='color: #FFFFFF;'>Start Chatting</strong><br>
-                        <span style='color: #AAAAAA;'>Ask questions about the video content using natural language</span>
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            # Step-by-step guide with clean styling
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.markdown("#### 1️⃣ Enter Video ID")
+                st.markdown("Enter the 11-character YouTube video ID (e.g., dQw4w9WgXcQ)")
+            
+            with col2:
+                st.markdown("#### 2️⃣ Load Video")
+                st.markdown("Click 'Load Video' to extract the transcript automatically")
+            
+            with col3:
+                st.markdown("#### 3️⃣ Start Chatting")
+                st.markdown("Ask questions about the video content using natural language")
             
             st.markdown("### ✨ Key Features")
             
