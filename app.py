@@ -553,9 +553,9 @@ def main():
             st.markdown("### 🎯 Try These Video IDs")
             
             example_videos = [
+                {"id": "Gfr50f6ZBvo", "title": "Podcast Interview", "note": "Long-form conversation"},
                 {"id": "dQw4w9WgXcQ", "title": "Rick Astley - Never Gonna Give You Up", "note": "Classic music video"},
-                {"id": "9bZkp7q19f0", "title": "TED Talk example", "note": "Educational content"},
-                {"id": "fJ9rUzIMcZQ", "title": "Science video", "note": "Informational content"}
+                {"id": "9bZkp7q19f0", "title": "TED Talk example", "note": "Educational content"}
             ]
             
             for video in example_videos:

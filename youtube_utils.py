@@ -66,6 +66,7 @@ class YouTubeTranscriptExtractor:
             st.error("No captions available for this video.")
             return None
         except Exception as e:
+            print(f"Debug - Error extracting transcript: {str(e)}")
             st.error(f"Error extracting transcript: {str(e)}")
             return None
     
