@@ -453,7 +453,7 @@ def main():
     col1, col2 = st.columns([3, 1])
     
     with col1:
-        if st.session_state.video_info and st.session_state.chat_handler:
+        if st.session_state.current_video_loaded:
             st.header("💬 Chat about the Video")
             
             # Display chat history
@@ -475,10 +475,10 @@ def main():
                 # Add user message to chat history
                 st.session_state.chat_history.append({"role": "user", "content": user_question})
                 
-                # Get AI response
-                with st.spinner("Thinking..."):
+                # Get AI response using enhanced handler with vector search
+                with st.spinner("Searching transcript and generating response..."):
                     try:
-                        response = st.session_state.chat_handler.get_response(
+                        response = st.session_state.enhanced_chat_handler.get_response(
                             user_question, 
                             st.session_state.chat_history[:-1]  # Exclude the current question
                         )
@@ -655,7 +655,7 @@ def main():
             st.markdown('</div>', unsafe_allow_html=True)
         
         # Quick actions section (always visible)
-        elif st.session_state.video_info and st.session_state.chat_handler:
+        elif st.session_state.current_video_loaded:
             st.markdown('<div class="video-info-card">', unsafe_allow_html=True)
             st.header("⚡ Quick Actions")
             
