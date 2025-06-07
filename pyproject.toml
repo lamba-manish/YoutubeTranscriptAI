@@ -4,8 +4,15 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
+    "faiss-cpu>=1.11.0",
+    "langchain>=0.3.25",
+    "langchain-community>=0.3.24",
+    "langchain-openai>=0.3.21",
     "openai>=1.84.0",
+    "psycopg2-binary>=2.9.10",
+    "python-dotenv>=1.1.0",
     "requests>=2.32.3",
+    "sqlalchemy>=2.0.41",
     "streamlit>=1.45.1",
     "youtube-transcript-api>=1.0.3",
 ]

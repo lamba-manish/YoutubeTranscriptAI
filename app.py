@@ -1,7 +1,8 @@
 import streamlit as st
 import re
+import os
 from youtube_utils import YouTubeTranscriptExtractor
-from chat_handler import ChatHandler
+from backend.enhanced_chat_handler import EnhancedChatHandler
 
 # Page configuration
 st.set_page_config(
@@ -315,12 +316,10 @@ st.markdown("""
 # Initialize session state
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
-if 'video_info' not in st.session_state:
-    st.session_state.video_info = None
-if 'transcript' not in st.session_state:
-    st.session_state.transcript = None
-if 'chat_handler' not in st.session_state:
-    st.session_state.chat_handler = None
+if 'enhanced_chat_handler' not in st.session_state:
+    st.session_state.enhanced_chat_handler = EnhancedChatHandler()
+if 'current_video_loaded' not in st.session_state:
+    st.session_state.current_video_loaded = False
 
 def extract_video_id(url_or_id):
     """Extract YouTube video ID from URL or return ID if already provided"""
@@ -346,7 +345,7 @@ def extract_video_id(url_or_id):
 
 def main():
     # App title with status indicator
-    if st.session_state.video_info and st.session_state.chat_handler:
+    if st.session_state.enhanced_chat_handler.is_video_loaded():
         status_html = '<span class="status-indicator status-online"></span>'
         status_text = "Ready to Chat"
     else:
@@ -380,66 +379,75 @@ def main():
                 
                 # Basic validation for YouTube video ID format
                 if len(video_id) == 11 and re.match(r'^[a-zA-Z0-9_-]{11}$', video_id):
-                    with st.spinner("Extracting transcript..."):
-                        extractor = YouTubeTranscriptExtractor()
+                    try:
+                        # Check if video already exists in database
+                        chat_handler = st.session_state.enhanced_chat_handler
                         
-                        try:
-                            # Get video info and transcript
-                            video_info = extractor.get_video_info(video_id)
-                            transcript = extractor.get_transcript(video_id)
-                            
-                            if transcript:
-                                st.session_state.video_info = video_info
-                                st.session_state.transcript = transcript
-                                st.session_state.chat_handler = ChatHandler(transcript, video_info)
+                        if chat_handler.db_manager.video_exists(video_id):
+                            # Load from database
+                            success = chat_handler.load_video(video_id)
+                            if success:
+                                st.session_state.current_video_loaded = True
                                 st.session_state.chat_history = []  # Reset chat history
-                                st.success("✅ Video loaded successfully!")
                                 st.rerun()
-                            else:
-                                st.error("❌ Could not extract transcript from this video. Make sure the video has captions available.")
+                        else:
+                            # Extract new transcript
+                            with st.spinner("Extracting transcript..."):
+                                extractor = YouTubeTranscriptExtractor()
+                                video_info = extractor.get_video_info(video_id)
+                                transcript = extractor.get_transcript(video_id)
                                 
-                        except Exception as e:
-                            st.error(f"❌ Error loading video: {str(e)}")
-                            st.info("💡 Try a different video ID or make sure the video has captions available.")
+                                if transcript:
+                                    # Load and process with enhanced handler
+                                    success = chat_handler.load_video(video_id, transcript, video_info)
+                                    if success:
+                                        st.session_state.current_video_loaded = True
+                                        st.session_state.chat_history = []  # Reset chat history
+                                        st.rerun()
+                                else:
+                                    st.error("❌ Could not extract transcript from this video. Make sure the video has captions available.")
+                                    
+                    except Exception as e:
+                        st.error(f"❌ Error loading video: {str(e)}")
+                        st.info("💡 Try a different video ID or make sure the video has captions available.")
                 else:
                     st.error("❌ Please enter a valid 11-character YouTube video ID")
             else:
                 st.warning("⚠️ Please enter a YouTube video ID")
         
         # Display video information with modern card design
-        if st.session_state.video_info:
+        if st.session_state.current_video_loaded:
             st.divider()
             st.header("📊 Video Info")
             
-            video_info = st.session_state.video_info
+            video_info = st.session_state.enhanced_chat_handler.get_video_info()
             
-            # Create a styled card for video info
-            st.markdown('<div class="video-info-card">', unsafe_allow_html=True)
-            
-            # Display thumbnail if available
-            if video_info.get('thumbnail'):
-                st.image(video_info['thumbnail'], use_container_width=True)
-            
-            # Display video details with better formatting
-            if video_info.get('title'):
-                st.markdown(f"**🎬 Title**")
-                st.markdown(f"<p style='color: #AAAAAA; margin-top: -10px;'>{video_info['title']}</p>", unsafe_allow_html=True)
-            
-            if video_info.get('channel'):
-                st.markdown(f"**👤 Channel**")
-                st.markdown(f"<p style='color: #AAAAAA; margin-top: -10px;'>{video_info['channel']}</p>", unsafe_allow_html=True)
-            
-            if video_info.get('duration'):
-                st.markdown(f"**⏱️ Duration**")
-                st.markdown(f"<p style='color: #AAAAAA; margin-top: -10px;'>{video_info['duration']}</p>", unsafe_allow_html=True)
-            
-            # Display transcript length with icon
-            if st.session_state.transcript:
-                word_count = len(st.session_state.transcript.split())
-                st.markdown(f"**📝 Transcript**")
-                st.markdown(f"<p style='color: #AAAAAA; margin-top: -10px;'>{word_count:,} words available</p>", unsafe_allow_html=True)
-            
-            st.markdown('</div>', unsafe_allow_html=True)
+            if video_info:
+                # Create a styled card for video info
+                st.markdown('<div class="video-info-card">', unsafe_allow_html=True)
+                
+                # Display thumbnail if available
+                if video_info.get('thumbnail'):
+                    st.image(video_info['thumbnail'], use_container_width=True)
+                
+                # Display video details with better formatting
+                if video_info.get('title'):
+                    st.markdown(f"**🎬 Title**")
+                    st.markdown(f"<p style='color: #AAAAAA; margin-top: -10px;'>{video_info['title']}</p>", unsafe_allow_html=True)
+                
+                if video_info.get('channel'):
+                    st.markdown(f"**👤 Channel**")
+                    st.markdown(f"<p style='color: #AAAAAA; margin-top: -10px;'>{video_info['channel']}</p>", unsafe_allow_html=True)
+                
+                if video_info.get('duration'):
+                    st.markdown(f"**⏱️ Duration**")
+                    st.markdown(f"<p style='color: #AAAAAA; margin-top: -10px;'>{video_info['duration']}</p>", unsafe_allow_html=True)
+                
+                # Display database status
+                st.markdown(f"**💾 Database**")
+                st.markdown(f"<p style='color: #00FF00; margin-top: -10px;'>✓ Stored with vector embeddings</p>", unsafe_allow_html=True)
+                
+                st.markdown('</div>', unsafe_allow_html=True)
     
     # Main chat interface
     col1, col2 = st.columns([3, 1])
