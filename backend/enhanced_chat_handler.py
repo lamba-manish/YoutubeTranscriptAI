@@ -39,6 +39,17 @@ class EnhancedChatHandler:
                     'duration': video_data['duration'],
                     'thumbnail': video_data['thumbnail']
                 }
+                
+                # Check if embeddings exist, generate if missing
+                if not self.db_manager.embeddings_exist(video_id):
+                    print(f"Debug - No embeddings found for {video_id}, generating...")
+                    with st.spinner("Generating embeddings for AI chat..."):
+                        success = self.vector_manager.process_video_transcript(
+                            video_id, video_data['transcript_text'], self.current_video_info
+                        )
+                        if not success:
+                            st.warning("⚠️ Chat functionality may be limited - could not generate embeddings")
+                
                 return True
             
             # If not in database, save new transcript
@@ -80,6 +91,17 @@ class EnhancedChatHandler:
             return "Please load a video first before asking questions."
         
         try:
+            # Check if embeddings exist, regenerate if missing
+            if not self.db_manager.embeddings_exist(self.current_video_id):
+                print(f"Debug - No embeddings found for chat, attempting to regenerate...")
+                video_data = self.db_manager.get_video_transcript(self.current_video_id)
+                if video_data:
+                    success = self.vector_manager.process_video_transcript(
+                        self.current_video_id, video_data['transcript_text'], self.current_video_info
+                    )
+                    if not success:
+                        return "Chat functionality is currently unavailable. Vector embeddings could not be generated for this video."
+            
             # Get AI response using vector search
             response, context = self.vector_manager.query_transcript_with_context(
                 self.current_video_id, 

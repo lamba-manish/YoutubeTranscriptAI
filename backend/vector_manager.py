@@ -94,7 +94,7 @@ class VectorManager:
             
             if not embeddings_data:
                 print(f"Debug - No embeddings found for video {video_id}")
-                return None
+                raise Exception(f"No vector embeddings found for video {video_id}")
             
             print(f"Debug - Loading {len(embeddings_data)} embeddings from database")
             
@@ -163,7 +163,11 @@ class VectorManager:
             
         except Exception as e:
             print(f"Debug - Error querying transcript: {str(e)}")
-            return f"Error processing your question: {str(e)}", ""
+            # Try to provide a fallback response
+            error_msg = "No vector embeddings found for this video."
+            if "embeddings" in str(e).lower() or "vector" in str(e).lower():
+                error_msg += " Please try generating the study tools first, which will create the necessary embeddings for chat functionality."
+            return error_msg, ""
 
     def query_transcript(self, video_id: str, question: str, k: int = 4) -> str:
         """
