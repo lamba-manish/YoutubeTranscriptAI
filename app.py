@@ -518,6 +518,31 @@ def main():
                     if st.button("📚 Video History", use_container_width=True):
                         st.session_state.show_history = True
                 
+                # Study Guide Features
+                st.markdown("#### 📚 Study Tools")
+                col3, col4, col5 = st.columns(3)
+                
+                with col3:
+                    if st.button("📖 Study Guide", use_container_width=True):
+                        with st.spinner("Generating comprehensive study guide..."):
+                            study_guide = st.session_state.enhanced_chat_handler.generate_study_guide()
+                            st.session_state.study_guide = study_guide
+                            st.rerun()
+                
+                with col4:
+                    if st.button("📝 Quick Notes", use_container_width=True):
+                        with st.spinner("Generating study notes..."):
+                            study_notes = st.session_state.enhanced_chat_handler.generate_study_notes()
+                            st.session_state.study_notes = study_notes
+                            st.rerun()
+                
+                with col5:
+                    if st.button("🎯 Flashcards", use_container_width=True):
+                        with st.spinner("Creating flashcards..."):
+                            flashcards = st.session_state.enhanced_chat_handler.generate_flashcards(15)
+                            st.session_state.flashcards = flashcards
+                            st.rerun()
+                
                 # Display history if requested
                 if st.session_state.get('show_history', False):
                     st.divider()
