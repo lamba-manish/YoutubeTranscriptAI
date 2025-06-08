@@ -156,3 +156,20 @@ class DatabaseManager:
                 'thumbnail_url': video.thumbnail_url,
                 'created_at': video.created_at.strftime('%Y-%m-%d %H:%M') if video.created_at else 'Unknown'
             } for video in videos]
+    
+    def delete_video(self, video_id: str) -> bool:
+        """Delete video transcript and all associated embeddings from database"""
+        try:
+            with self.get_session() as session:
+                # Delete vector embeddings first
+                embeddings_deleted = session.query(VectorEmbedding).filter_by(video_id=video_id).delete()
+                
+                # Delete video transcript
+                transcript_deleted = session.query(VideoTranscript).filter_by(video_id=video_id).delete()
+                
+                session.commit()
+                
+                return transcript_deleted > 0 or embeddings_deleted > 0
+        except Exception as e:
+            print(f"Error deleting video {video_id}: {str(e)}")
+            return False
