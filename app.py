@@ -126,7 +126,7 @@ def generate_comprehensive_report():
 # Page configuration
 st.set_page_config(
     page_title="YouTube Transcript Chat AI",
-    page_icon="🎬",
+    page_icon="🚀",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -137,29 +137,33 @@ st.markdown("""
     /* Import modern fonts */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
     
-    /* Root variables for consistent theming */
+    /* Root variables for consistent theming with modern light colors */
     :root {
-        --primary-bg: #0F0F23;
-        --secondary-bg: #1A1A2E;
-        --accent-bg: #16213E;
-        --primary-text: #FFFFFF;
-        --secondary-text: #B8BCC8;
-        --accent-color: #FF6B6B;
-        --secondary-accent: #4ECDC4;
-        --border-color: #2D2D44;
-        --hover-color: #3A3A5C;
-        --success-color: #06D6A0;
-        --warning-color: #FFD60A;
-        --error-color: #EF476F;
-        --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        --border-radius: 12px;
+        --primary-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-bg: #f8faff;
+        --accent-bg: #ffffff;
+        --primary-text: #2d3748;
+        --secondary-text: #4a5568;
+        --accent-color: #667eea;
+        --secondary-accent: #38b2ac;
+        --border-color: #e2e8f0;
+        --hover-color: #edf2f7;
+        --success-color: #48bb78;
+        --warning-color: #ed8936;
+        --error-color: #f56565;
+        --light-blue: #ebf8ff;
+        --light-purple: #faf5ff;
+        --light-green: #f0fff4;
+        --light-orange: #fffaf0;
+        --shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        --border-radius: 16px;
         --button-height: 44px;
         --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     /* Global app styling */
     .stApp {
-        background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
+        background: var(--secondary-bg);
         color: var(--primary-text);
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         line-height: 1.6;
@@ -489,7 +493,7 @@ st.markdown("""
     .feature-card:hover {
         border-color: var(--secondary-accent);
         transform: translateY(-4px);
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 20px 40px rgba(102, 126, 234, 0.15);
     }
     
     .feature-card h3 {
