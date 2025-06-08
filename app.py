@@ -137,7 +137,7 @@ st.markdown("""
     /* Import modern fonts */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
     
-    /* Root variables for consistent theming - Dark Mode */
+    /* Root variables for consistent theming */
     :root {
         --primary-bg: #0F0F23;
         --secondary-bg: #1A1A2E;
@@ -155,23 +155,6 @@ st.markdown("""
         --border-radius: 12px;
         --button-height: 44px;
         --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    /* Light Mode Variables */
-    [data-theme="light"] {
-        --primary-bg: #FAFBFC;
-        --secondary-bg: #FFFFFF;
-        --accent-bg: #F5F6FA;
-        --primary-text: #2C3E50;
-        --secondary-text: #546E7A;
-        --accent-color: #E74C3C;
-        --secondary-accent: #3498DB;
-        --border-color: #E1E8ED;
-        --hover-color: #F1F3F4;
-        --success-color: #27AE60;
-        --warning-color: #F39C12;
-        --error-color: #E74C3C;
-        --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     }
     
     /* Global app styling */
@@ -613,72 +596,7 @@ st.markdown("""
         transform: scale(1.02);
         box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
     }
-    
-    /* Theme Toggle Button */
-    .theme-toggle {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        background: var(--accent-bg);
-        border: 2px solid var(--border-color);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        transition: var(--transition);
-        z-index: 1000;
-        box-shadow: var(--shadow);
-    }
-    
-    .theme-toggle:hover {
-        background: var(--hover-color);
-        transform: scale(1.1);
-        border-color: var(--secondary-accent);
-    }
-    
-    .theme-toggle:active {
-        transform: scale(0.95);
-    }
 </style>
-
-<script>
-function toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'light' ? null : 'light';
-    
-    if (newTheme) {
-        document.documentElement.setAttribute('data-theme', 'light');
-        localStorage.setItem('theme', 'light');
-    } else {
-        document.documentElement.removeAttribute('data-theme');
-        localStorage.setItem('theme', 'dark');
-    }
-    
-    // Update toggle button icon
-    const toggleButton = document.querySelector('.theme-toggle');
-    if (toggleButton) {
-        toggleButton.innerHTML = newTheme === 'light' ? '🌙' : '☀️';
-    }
-}
-
-// Load saved theme on page load
-document.addEventListener('DOMContentLoaded', function() {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light') {
-        document.documentElement.setAttribute('data-theme', 'light');
-    }
-    
-    // Set initial toggle button icon
-    const toggleButton = document.querySelector('.theme-toggle');
-    if (toggleButton) {
-        toggleButton.innerHTML = savedTheme === 'light' ? '🌙' : '☀️';
-    }
-});
-</script>
 """, unsafe_allow_html=True)
 
 # Initialize session state
@@ -690,8 +608,6 @@ if 'video_loaded' not in st.session_state:
     st.session_state.video_loaded = False
 if 'current_video_loaded' not in st.session_state:
     st.session_state.current_video_loaded = False
-if 'theme' not in st.session_state:
-    st.session_state.theme = 'dark'
 
 def extract_video_id(video_id):
     """Validate and return YouTube video ID if it's in correct format"""
@@ -708,28 +624,6 @@ def extract_video_id(video_id):
     return None
 
 def main():
-    # Theme toggle in top-right corner
-    col1, col2 = st.columns([6, 1])
-    with col2:
-        theme_icon = "🌙" if st.session_state.theme == "light" else "☀️"
-        if st.button(theme_icon, help="Toggle theme", key="theme_toggle"):
-            st.session_state.theme = "light" if st.session_state.theme == "dark" else "dark"
-            st.rerun()
-    
-    # Apply theme based on session state
-    if st.session_state.theme == "light":
-        st.markdown("""
-        <script>
-            document.documentElement.setAttribute('data-theme', 'light');
-        </script>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <script>
-            document.documentElement.removeAttribute('data-theme');
-        </script>
-        """, unsafe_allow_html=True)
-    
     # Hero section with proper centering
     st.markdown("""
     <div class="center-content">
