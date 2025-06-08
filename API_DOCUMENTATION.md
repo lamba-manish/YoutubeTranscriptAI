@@ -1,276 +1,292 @@
-# API Documentation - YouTube Transcript Chat AI
+# API Documentation - Advanced RAG Implementation
 
-## Table of Contents
-1. [Core Classes](#core-classes)
-2. [Database Models](#database-models)
-3. [Error Handling](#error-handling)
-4. [Configuration](#configuration)
-5. [Usage Examples](#usage-examples)
+This document provides comprehensive API documentation for the YouTube Transcript Chat AI application featuring industry-standard RAG (Retrieval-Augmented Generation) architecture.
 
-## Core Classes
+## Overview
 
-### EnhancedChatHandler
+The application provides a modular backend API with advanced RAG capabilities including semantic chunking, multi-query retrieval, document reranking, and intelligent quality monitoring for processing YouTube video transcripts and generating high-quality AI responses.
 
-Main interface for video processing and AI interactions.
+## Advanced RAG Architecture
 
+### AdvancedRAGSystem
+
+The core RAG implementation featuring industry best practices.
+
+#### Initialization
 ```python
-class EnhancedChatHandler:
-    """Enhanced chat handler with database integration and vector search"""
-    
-    def __init__(self) -> None:
-        """Initialize handler with database, vector manager, and AI services"""
-    
-    def load_video(self, video_id: str, transcript_text: str = None, 
-                   video_info: dict = None) -> bool:
-        """
-        Load video transcript, either from database or by processing new transcript
-        
-        Args:
-            video_id: YouTube video ID (11 characters)
-            transcript_text: Optional pre-extracted transcript
-            video_info: Optional video metadata
-            
-        Returns:
-            bool: Success status
-        """
-    
-    def get_response(self, user_question: str, chat_history: list = None) -> str:
-        """
-        Get AI response using vector similarity search
-        
-        Args:
-            user_question: User's question about the video
-            chat_history: Previous conversation history
-            
-        Returns:
-            str: AI-generated response with citations
-        """
-    
-    def get_video_summary(self) -> str:
-        """Generate comprehensive video summary"""
-    
-    def get_highlight_reel(self, num_highlights: int = 5) -> str:
-        """Extract key moments from video"""
-    
-    def get_video_mood_analysis(self) -> str:
-        """Analyze video tone and emotional characteristics"""
-    
-    def generate_study_guide(self) -> dict:
-        """Generate comprehensive study guide with learning objectives"""
-    
-    def generate_flashcards(self, num_cards: int = 15) -> list:
-        """Create interactive flashcards for spaced repetition"""
-    
-    def generate_study_notes(self) -> dict:
-        """Generate quick study notes with actionable insights"""
+from backend.advanced_rag import AdvancedRAGSystem
+from backend.database import DatabaseManager
+
+db_manager = DatabaseManager()
+rag_system = AdvancedRAGSystem(db_manager)
 ```
 
-### StudyGuideGenerator
+#### Key Features
+- **Semantic Chunking**: 800-character chunks with 200-character overlap
+- **Multi-Query Retrieval**: Query expansion for comprehensive search
+- **Document Reranking**: AI-powered relevance scoring
+- **Quality Monitoring**: Automatic detection of low-quality embeddings
 
-AI-powered educational content generator.
+#### Methods
 
+##### `process_video_transcript(video_id: str, transcript_text: str, video_info: dict) -> bool`
+Processes transcript using advanced semantic chunking and creates high-quality embeddings.
+
+**Parameters:**
+- `video_id` (str): YouTube video ID (11 characters)
+- `transcript_text` (str): Video transcript with timestamps
+- `video_info` (dict): Video metadata including title, channel, duration
+
+**Returns:**
+- `bool`: True if processing successful, False otherwise
+
+**Features:**
+- Intelligent timestamp extraction and preservation
+- Semantic-aware text chunking with overlap
+- Batch embedding generation for efficiency
+- Automatic quality threshold enforcement
+
+**Example:**
 ```python
-class StudyGuideGenerator:
-    """Generates comprehensive study guides from video transcripts"""
-    
-    def generate_comprehensive_study_guide(self, video_id: str, 
-                                         transcript_text: str, 
-                                         video_info: dict) -> Dict[str, Any]:
-        """
-        Generate complete study guide with multiple sections
-        
-        Returns:
-            dict: {
-                'overview': str,
-                'learning_objectives': List[str],
-                'key_concepts': List[dict],
-                'detailed_outline': dict,
-                'discussion_questions': List[str],
-                'practice_exercises': List[str],
-                'quiz_questions': List[dict],
-                'vocabulary': List[dict],
-                'takeaways': List[str]
-            }
-        """
-    
-    def generate_flashcards(self, video_id: str, transcript_text: str, 
-                           video_info: dict, num_cards: int = 15) -> List[Dict[str, str]]:
-        """
-        Generate flashcards for spaced repetition learning
-        
-        Returns:
-            list: [
-                {
-                    'question': str,
-                    'answer': str,
-                    'difficulty': 'easy'|'medium'|'hard',
-                    'category': str
-                }
-            ]
-        """
-    
-    def generate_quick_study_notes(self, video_id: str, transcript_text: str, 
-                                  video_info: dict) -> Dict[str, Any]:
-        """
-        Generate concise study notes for rapid review
-        
-        Returns:
-            dict: {
-                'summary': str,
-                'key_points': List[str],
-                'important_quotes': List[str],
-                'actionable_items': List[str],
-                'time_stamps': List[dict]
-            }
-        """
+success = rag_system.process_video_transcript(
+    "dQw4w9WgXcQ", 
+    "[00:12] Hello world...", 
+    {"title": "Example Video", "channel": "Test Channel"}
+)
 ```
 
-### VectorManager
+##### `retrieve_and_answer(video_id: str, question: str) -> Tuple[str, str, List[str]]`
+Advanced retrieval with query expansion, multi-vector search, and document reranking.
 
-Handles embedding generation and similarity search using FAISS.
+**Parameters:**
+- `video_id` (str): YouTube video ID
+- `question` (str): User question about video content
 
+**Returns:**
+- `tuple`: (response, context, sources) with detailed citations
+
+**Advanced Features:**
+- Query expansion for lyrics, quotes, and content requests
+- Hybrid semantic and keyword search
+- Document reranking based on relevance scoring
+- Source citation with timestamp references
+
+**Example:**
 ```python
-class VectorManager:
-    """Manages vector embeddings and similarity search using LangChain"""
-    
-    def process_video_transcript(self, video_id: str, transcript_text: str, 
-                                video_info: dict) -> bool:
-        """
-        Process and store video transcript with embeddings
-        
-        Args:
-            video_id: Unique video identifier
-            transcript_text: Full transcript content
-            video_info: Video metadata
-            
-        Returns:
-            bool: Processing success status
-        """
-    
-    def query_transcript_with_context(self, video_id: str, question: str, 
-                                    k: int = 4) -> tuple[str, str]:
-        """
-        Query transcript using vector similarity search
-        
-        Args:
-            video_id: Video to search
-            question: User's question
-            k: Number of similar chunks to retrieve
-            
-        Returns:
-            tuple: (ai_response, source_context)
-        """
-    
-    def create_vector_store(self, video_id: str) -> FAISS:
-        """Create FAISS vector store from stored embeddings"""
+response, context, sources = rag_system.retrieve_and_answer(
+    "dQw4w9WgXcQ", 
+    "What are the lyrics in the chorus?"
+)
+print(f"Response: {response}")
+print(f"Sources: {sources}")
 ```
 
-### ResponseEvaluator
+### Enhanced Chat Handler
 
-Evaluates AI responses for quality and faithfulness.
+Main interface integrating advanced RAG with conversation management.
 
+#### Initialization
 ```python
-class ResponseEvaluator:
-    """Evaluates AI responses for faithfulness, relevance, and quality"""
-    
-    def evaluate_response(self, question: str, response: str, 
-                         context: str) -> Dict[str, float]:
-        """
-        Evaluate AI response with multiple metrics
-        
-        Args:
-            question: User's original question
-            response: AI's generated response
-            context: Source context from transcript
-            
-        Returns:
-            dict: {
-                'faithfulness': float,  # 0.0 to 1.0
-                'relevance': float,     # 0.0 to 1.0
-                'completeness': float,  # 0.0 to 1.0
-                'clarity': float,       # 0.0 to 1.0
-                'overall_score': float  # 0.0 to 1.0
-            }
-        """
+from backend.enhanced_chat_handler import EnhancedChatHandler
+
+handler = EnhancedChatHandler()
+```
+
+#### Methods
+
+##### `load_video(video_id: str, transcript_text: str = None, video_info: dict = None) -> bool`
+Loads video with intelligent quality detection and automatic embedding regeneration.
+
+**Quality Monitoring:**
+- Detects embeddings with < 10 chunks as low quality
+- Automatically regenerates poor-quality embeddings
+- Progress tracking with user feedback
+
+**Example:**
+```python
+success = handler.load_video("dQw4w9WgXcQ")
+# Automatically detects if existing embeddings are low quality
+# Regenerates with advanced RAG if needed
+```
+
+##### `get_response(user_question: str, chat_history: list = None) -> str`
+Generates AI response using advanced RAG system with evaluation.
+
+**Advanced Features:**
+- Multi-stage retrieval with query expansion
+- Document reranking for relevance
+- Response quality evaluation with faithfulness scoring
+- Comprehensive error handling and fallbacks
+
+**Quality Metrics:**
+- Faithfulness score (0.0-1.0)
+- Relevance assessment
+- Completeness evaluation
+- Clarity measurement
+
+## Configuration
+
+### RAG System Configuration
+```python
+# Text Splitting Configuration
+CHUNK_SIZE = 800                    # Optimal for semantic coherence
+CHUNK_OVERLAP = 200                 # 25% overlap for context preservation
+
+# Embedding Configuration
+EMBEDDING_MODEL = "text-embedding-3-large"    # OpenAI's latest model
+BATCH_SIZE = 50                               # Embedding batch processing
+
+# Retrieval Configuration
+SIMILARITY_SEARCH_K = 8             # Initial retrieval count
+RERANK_TOP_K = 6                    # Final document count
+QUERY_EXPANSION_ENABLED = True      # Multi-query retrieval
+
+# Quality Thresholds
+MIN_CHUNKS_THRESHOLD = 10           # Minimum chunks for quality
+LOW_FAITHFULNESS_THRESHOLD = 0.7    # Response quality alert
+```
+
+### Environment Variables
+```bash
+# Required
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Optional Advanced Configuration
+RAG_CHUNK_SIZE=800
+RAG_CHUNK_OVERLAP=200
+RAG_EMBEDDING_MODEL=text-embedding-3-large
+RAG_CHAT_MODEL=gpt-4o
+RAG_TEMPERATURE=0.1
+```
+
+## Data Models
+
+### Advanced RAG Document Model
+```python
+{
+    "page_content": "[02:30] Never gonna give you up, never gonna let you down...",
+    "metadata": {
+        "video_id": "dQw4w9WgXcQ",
+        "chunk_index": 25,
+        "chunk_type": "timestamped",
+        "start_timestamp": "02:30",
+        "end_timestamp": "02:45",
+        "timestamp_count": 3,
+        "word_count": 24,
+        "char_count": 156
+    }
+}
+```
+
+### Enhanced Response Model
+```python
+{
+    "response": "The lyrics from 2:30 to 3:00 are: 'Never gonna give you up...'",
+    "context": "Retrieved from 6 relevant segments",
+    "sources": [
+        "[1] Chunk 25 (02:30-02:45)",
+        "[2] Chunk 26 (02:45-03:00)"
+    ],
+    "evaluation": {
+        "faithfulness": 0.95,
+        "relevance": 0.92,
+        "overall_grade": "A"
+    },
+    "processing_time": 1.2
+}
 ```
 
 ## Usage Examples
 
-### Basic Video Processing
-
+### Complete Advanced RAG Workflow
 ```python
 from backend.enhanced_chat_handler import EnhancedChatHandler
 
-def process_video():
-    handler = EnhancedChatHandler()
+# Initialize with advanced RAG
+handler = EnhancedChatHandler()
+
+# Load video with quality monitoring
+video_id = "dQw4w9WgXcQ"
+success = handler.load_video(video_id)
+
+if success:
+    # Advanced query with lyrics request
+    response = handler.get_response(
+        "Can you give me the complete lyrics from the chorus?"
+    )
     
-    # Load video
-    success = handler.load_video("dQw4w9WgXcQ")
-    if not success:
-        print("Failed to load video")
-        return
+    # The advanced RAG system will:
+    # 1. Expand query to include variations
+    # 2. Retrieve relevant chunks with timestamps
+    # 3. Rerank for optimal relevance
+    # 4. Generate response with citations
+    # 5. Evaluate response quality
     
-    # Generate study materials
-    study_guide = handler.generate_study_guide()
-    flashcards = handler.generate_flashcards(20)
-    
-    # Interactive chat
-    response = handler.get_response("What is the main theme?")
-    print(f"AI: {response}")
+    print(f"Response: {response}")
 ```
 
-### Custom Study Guide Generation
-
+### Quality Monitoring Example
 ```python
-from backend.study_guide_generator import StudyGuideGenerator
+# Load video with automatic quality detection
+handler = EnhancedChatHandler()
 
-def create_custom_study_guide(transcript: str, video_info: dict):
-    generator = StudyGuideGenerator()
-    
-    # Generate comprehensive guide
-    full_guide = generator.generate_comprehensive_study_guide(
-        video_id="custom_001",
-        transcript_text=transcript,
-        video_info=video_info
-    )
-    
-    # Generate specific components
-    flashcards = generator.generate_flashcards(
-        video_id="custom_001",
-        transcript_text=transcript,
-        video_info=video_info,
-        num_cards=25
-    )
-    
-    return {
-        'study_guide': full_guide,
-        'flashcards': flashcards
-    }
+# System automatically detects low-quality embeddings
+success = handler.load_video("video_with_poor_embeddings")
+
+# Advanced RAG regenerates high-quality embeddings
+# Progress: "Generating high-quality embeddings for AI chat..."
+# Result: "Advanced RAG - Created 45 semantic chunks"
 ```
 
-### Vector Search Operations
+## Performance Metrics
 
+### Processing Performance
 ```python
-from backend.vector_manager import VectorManager
-from backend.database import DatabaseManager
-
-def advanced_search():
-    db_manager = DatabaseManager()
-    vector_manager = VectorManager(db_manager)
-    
-    # Process new video
-    vector_manager.process_video_transcript(
-        video_id="abc123",
-        transcript_text="Your transcript here...",
-        video_info={'title': 'Example Video'}
-    )
-    
-    # Search with context
-    response, context = vector_manager.query_transcript_with_context(
-        video_id="abc123",
-        question="What are the key takeaways?",
-        k=5
-    )
-    
-    return response, context
+{
+    "video_length": "3:32",
+    "transcript_words": 456,
+    "chunk_count": 8,
+    "embedding_generation_time": 2.3,
+    "total_processing_time": 3.1,
+    "memory_usage_mb": 45.2
+}
 ```
+
+### Query Performance
+```python
+{
+    "query": "What are the lyrics?",
+    "retrieval_time": 0.15,
+    "reranking_time": 0.08,
+    "response_generation_time": 1.2,
+    "total_response_time": 1.43,
+    "documents_retrieved": 8,
+    "documents_reranked": 6,
+    "faithfulness_score": 0.95
+}
+```
+
+## Best Practices
+
+### Optimal Query Formulation
+```python
+# Effective queries for advanced RAG
+queries = [
+    "What are the exact lyrics from 2:30 to 3:00?",           # Specific timestamps
+    "Can you quote what he said about artificial intelligence?", # Exact quotes
+    "Give me the complete lyrics of the chorus",               # Complete sections
+    "What are the main points discussed in this video?",       # Comprehensive summaries
+]
+```
+
+### Performance Optimization
+- Use specific timestamps for precise content retrieval
+- Request complete sections rather than fragments
+- Leverage the system's automatic quality detection
+- Monitor evaluation scores for response quality assessment
+
+### Quality Assurance
+- Faithfulness scores above 0.8 indicate high-quality responses
+- Automatic regeneration ensures optimal embedding quality
+- Multi-query retrieval maximizes content coverage
+- Document reranking improves answer relevance

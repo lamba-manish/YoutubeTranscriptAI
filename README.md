@@ -1,15 +1,15 @@
 # YouTube Transcript Chat AI
 
-A comprehensive, enterprise-grade Streamlit application that transforms YouTube videos into interactive learning experiences. Features advanced AI-powered transcript analysis, cross-language support, intelligent study guide generation, and real-time chat capabilities.
+An industry-standard AI-powered YouTube learning platform featuring advanced RAG (Retrieval-Augmented Generation) architecture that transforms video content into interactive, intelligent educational experiences with semantic chunking, query expansion, and document reranking.
 
 ## 🚀 Key Features
 
-### Core Functionality
-- **Multi-Language Transcript Extraction**: Supports 50+ languages with automatic translation
-- **Intelligent Vector Search**: FAISS-powered semantic search with LangChain integration
-- **AI-Powered Chat**: Context-aware conversations using OpenAI GPT-4o
-- **Response Quality Metrics**: Real-time evaluation of AI response faithfulness and relevance
-- **Persistent Database Storage**: SQLAlchemy with PostgreSQL for enterprise scalability
+### Advanced RAG System
+- **Industry-Standard RAG Architecture**: Multi-stage retrieval with semantic chunking and document reranking
+- **Intelligent Text Chunking**: 800-character chunks with 200-character overlap for optimal context preservation
+- **Multi-Query Retrieval**: Query expansion with hybrid semantic and keyword search
+- **Document Reranking**: AI-powered relevance scoring for improved answer accuracy
+- **Quality Monitoring**: Automatic detection and regeneration of low-quality embeddings
 
 ### Advanced Study Tools
 - **Comprehensive Study Guides**: AI-generated learning objectives, key concepts, and discussion questions
@@ -27,11 +27,11 @@ A comprehensive, enterprise-grade Streamlit application that transforms YouTube 
 ## 🏗️ Architecture
 
 ### Technology Stack
-- **Frontend**: Streamlit with custom CSS/HTML
-- **Backend**: Python with FastAPI-compatible structure
-- **AI/ML**: OpenAI GPT-4o, LangChain, FAISS vector database
-- **Database**: PostgreSQL with SQLAlchemy ORM
-- **Deployment**: Docker containerization with Replit compatibility
+- **Advanced RAG**: LangChain framework with RecursiveCharacterTextSplitter and FAISS vector store
+- **AI Models**: OpenAI GPT-4o and Text-Embedding-3-Large for state-of-the-art performance
+- **Frontend**: Streamlit with responsive design and real-time chat interface
+- **Backend**: Python with modular architecture supporting horizontal scaling
+- **Database**: SQLAlchemy ORM with PostgreSQL/SQLite flexibility
 
 ### System Components
 ```
