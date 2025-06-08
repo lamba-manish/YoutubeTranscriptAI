@@ -216,18 +216,41 @@ class YouTubeTranscriptExtractor:
             formatted_text = ""
             
             for entry in transcript_data:
-                # YouTube transcript API returns dict format: {'text': '...', 'start': ..., 'duration': ...}
-                start_time = self._seconds_to_timestamp(entry['start'])
-                text = entry['text'].strip()
-                
-                # Clean up the text
-                text = re.sub(r'\s+', ' ', text)  # Normalize whitespace
-                text = text.replace('\n', ' ')    # Remove line breaks
-                
-                if text:  # Only add non-empty text
-                    formatted_text += f"[{start_time}] {text}\n"
+                try:
+                    # Handle both dict and object attribute access patterns
+                    if hasattr(entry, 'start') and hasattr(entry, 'text'):
+                        # Object attribute access (FetchedTranscriptSnippet)
+                        start = entry.start
+                        text = entry.text
+                    elif isinstance(entry, dict):
+                        # Dictionary access
+                        start = entry.get('start', 0)
+                        text = entry.get('text', '')
+                    else:
+                        # Try both approaches as fallback
+                        try:
+                            start = entry['start']
+                            text = entry['text']
+                        except (KeyError, TypeError):
+                            start = getattr(entry, 'start', 0)
+                            text = getattr(entry, 'text', '')
+                    
+                    # Convert start time and clean text
+                    start_time = self._seconds_to_timestamp(start)
+                    text = str(text).strip()
+                    
+                    # Clean up the text
+                    text = re.sub(r'\s+', ' ', text)  # Normalize whitespace
+                    text = text.replace('\n', ' ')    # Remove line breaks
+                    
+                    if text:  # Only add non-empty text
+                        formatted_text += f"[{start_time}] {text}\n"
+                        
+                except Exception as entry_error:
+                    print(f"Debug - Error processing transcript entry: {entry_error}")
+                    continue
             
-            return formatted_text.strip()
+            return formatted_text.strip() if formatted_text else None
             
         except Exception as e:
             print(f"Error formatting transcript: {str(e)}")

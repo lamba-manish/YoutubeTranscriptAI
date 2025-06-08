@@ -9,6 +9,10 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from youtube_utils import YouTubeTranscriptExtractor
 from backend.enhanced_chat_handler import EnhancedChatHandler
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 def generate_flashcard_text(cards):
     """Convert flashcards to formatted text"""
@@ -19,42 +23,44 @@ def generate_flashcard_text(cards):
         text += f"A: {card.get('answer', 'No answer')}\n\n"
     return text
 
+
 def generate_pdf_content(title, content):
     """Generate PDF content from text"""
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter)
     styles = getSampleStyleSheet()
     story = []
-    
+
     # Title
     title_para = Paragraph(f"<b>{title}</b>", styles['Title'])
     story.append(title_para)
     story.append(Spacer(1, 12))
-    
+
     # Content
     for line in content.split('\n'):
         if line.strip():
             para = Paragraph(line, styles['Normal'])
             story.append(para)
         story.append(Spacer(1, 6))
-    
+
     doc.build(story)
     buffer.seek(0)
     return buffer.getvalue()
 
+
 def generate_study_guide_text(guide):
     """Convert study guide to formatted text"""
     text = "STUDY GUIDE\n\n"
-    
+
     if guide.get('overview'):
         text += f"OVERVIEW:\n{guide['overview']}\n\n"
-    
+
     if guide.get('learning_objectives'):
         text += "LEARNING OBJECTIVES:\n"
         for obj in guide['learning_objectives']:
             text += f"• {obj}\n"
         text += "\n"
-    
+
     if guide.get('key_concepts'):
         text += "KEY CONCEPTS:\n"
         for concept in guide['key_concepts']:
@@ -63,73 +69,76 @@ def generate_study_guide_text(guide):
             else:
                 text += f"• {concept}\n"
         text += "\n"
-    
+
     return text
+
 
 def generate_study_notes_text(notes):
     """Convert study notes to formatted text"""
     text = "QUICK STUDY NOTES\n\n"
-    
+
     if notes.get('summary'):
         text += f"SUMMARY:\n{notes['summary']}\n\n"
-    
+
     if notes.get('key_points'):
         text += "KEY POINTS:\n"
         for point in notes['key_points']:
             text += f"• {point}\n"
         text += "\n"
-    
+
     if notes.get('actionable_items'):
         text += "ACTION ITEMS:\n"
         for item in notes['actionable_items']:
             text += f"✓ {item}\n"
         text += "\n"
-    
+
     return text
+
 
 def generate_comprehensive_report():
     """Generate a comprehensive report with all available content"""
     report = "COMPREHENSIVE VIDEO ANALYSIS REPORT\n\n"
-    
+
     # Video info
-    if st.session_state.get('enhanced_chat_handler') and st.session_state.enhanced_chat_handler.is_video_loaded():
+    if st.session_state.get(
+            'enhanced_chat_handler'
+    ) and st.session_state.enhanced_chat_handler.is_video_loaded():
         video_info = st.session_state.enhanced_chat_handler.get_video_info()
         if video_info:
             report += f"VIDEO: {video_info.get('title', 'Unknown Title')}\n"
             report += f"CHANNEL: {video_info.get('channel', 'Unknown Channel')}\n"
             report += f"DURATION: {video_info.get('duration', 'Unknown')}\n\n"
-    
+
     # Add all available content
     if st.session_state.get('video_summary'):
         report += f"VIDEO SUMMARY:\n{st.session_state.video_summary}\n\n"
-    
+
     if st.session_state.get('video_highlights'):
         report += f"HIGHLIGHT REEL:\n{st.session_state.video_highlights}\n\n"
-    
+
     if st.session_state.get('video_mood'):
         report += f"MOOD ANALYSIS:\n{st.session_state.video_mood}\n\n"
-    
+
     if st.session_state.get('study_guide'):
         guide_text = generate_study_guide_text(st.session_state.study_guide)
         report += f"{guide_text}\n"
-    
+
     if st.session_state.get('study_notes'):
         notes_text = generate_study_notes_text(st.session_state.study_notes)
         report += f"{notes_text}\n"
-    
+
     if st.session_state.get('flashcards'):
         flashcard_text = generate_flashcard_text(st.session_state.flashcards)
         report += f"{flashcard_text}\n"
-    
+
     return report
 
+
 # Page configuration
-st.set_page_config(
-    page_title="YouTube Transcript Chat AI",
-    page_icon="🎬",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="YouTube Transcript Chat AI",
+                   page_icon="🎬",
+                   layout="wide",
+                   initial_sidebar_state="expanded")
 
 # Modern responsive CSS with consistent button widths and proper centering
 st.markdown("""
@@ -597,7 +606,8 @@ st.markdown("""
         box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+            unsafe_allow_html=True)
 
 # Initialize session state
 if 'chat_history' not in st.session_state:
@@ -609,19 +619,21 @@ if 'video_loaded' not in st.session_state:
 if 'current_video_loaded' not in st.session_state:
     st.session_state.current_video_loaded = False
 
+
 def extract_video_id(video_id):
     """Validate and return YouTube video ID if it's in correct format"""
     if not video_id:
         return None
-    
+
     # Clean the input (remove whitespace)
     video_id = video_id.strip()
-    
+
     # Validate video ID format (11 characters, alphanumeric + - and _)
     if re.match(r'^[a-zA-Z0-9_-]{11}$', video_id):
         return video_id
-    
+
     return None
+
 
 def main():
     # Hero section with proper centering
@@ -632,38 +644,45 @@ def main():
             Transform your YouTube watching experience with AI-powered conversations, study guides, and advanced RAG implementation.
         </p>
     </div>
-    """, unsafe_allow_html=True)
-    
+    """,
+                unsafe_allow_html=True)
+
     # Sidebar with responsive design
     with st.sidebar:
         st.markdown("### 📹 Video Input")
-        
+
         # Video ID input with improved styling
         video_input = st.text_input(
             "YouTube Video ID",
             placeholder="dQw4w9WgXcQ",
-            help="Enter a YouTube video ID (11 characters)"
-        )
-        
+            help="Enter a YouTube video ID (11 characters)")
+
         # Primary action button
         col1, col2 = st.columns([1, 1])
         with col1:
-            load_btn = st.button("🚀 Load Video", type="primary", use_container_width=True)
+            load_btn = st.button("🚀 Load Video",
+                                 type="primary",
+                                 use_container_width=True)
         with col2:
-            saved_btn = st.button("📋 Saved Videos", type="secondary", use_container_width=True)
-        
+            saved_btn = st.button("📋 Saved Videos",
+                                  type="secondary",
+                                  use_container_width=True)
+
         # Handle saved videos display
         if saved_btn:
-            st.session_state.show_saved_videos = not st.session_state.get('show_saved_videos', False)
-        
+            st.session_state.show_saved_videos = not st.session_state.get(
+                'show_saved_videos', False)
+
         # Display saved videos with improved UI
         if st.session_state.get('show_saved_videos', False):
             st.markdown("---")
             st.markdown("### 💾 Saved Videos")
             try:
-                available_videos = st.session_state.enhanced_chat_handler.get_available_videos()
+                available_videos = st.session_state.enhanced_chat_handler.get_available_videos(
+                )
                 if available_videos:
-                    for i, video in enumerate(available_videos[:5]):  # Show max 5 in sidebar
+                    for i, video in enumerate(
+                            available_videos[:5]):  # Show max 5 in sidebar
                         with st.container():
                             st.markdown(f"""
                             <div class="custom-container">
@@ -675,31 +694,35 @@ def main():
                                     <code>{video['video_id']}</code>
                                 </p>
                             </div>
-                            """, unsafe_allow_html=True)
-                            
-                            if st.button(f"🚀 Load Video", key=f"load_{video['video_id']}", use_container_width=True):
+                            """,
+                                        unsafe_allow_html=True)
+
+                            if st.button(f"🚀 Load Video",
+                                         key=f"load_{video['video_id']}",
+                                         use_container_width=True):
                                 with st.spinner("Loading video..."):
-                                    success = st.session_state.enhanced_chat_handler.load_video(video['video_id'])
+                                    success = st.session_state.enhanced_chat_handler.load_video(
+                                        video['video_id'])
                                     if success:
                                         st.session_state.current_video_loaded = True
                                         st.session_state.chat_history = []
                                         st.session_state.show_saved_videos = False
                                         st.rerun()
-                            
+
                             if i < len(available_videos[:5]) - 1:
                                 st.markdown("---")
                 else:
                     st.info("No saved videos yet")
             except Exception as e:
                 st.error(f"Error loading videos: {str(e)}")
-        
+
         # Handle video loading
         if load_btn and video_input:
             video_id = extract_video_id(video_input)
             if video_id:
                 try:
                     chat_handler = st.session_state.enhanced_chat_handler
-                    
+
                     if chat_handler.db_manager.video_exists(video_id):
                         with st.spinner("Loading from database..."):
                             success = chat_handler.load_video(video_id)
@@ -713,30 +736,34 @@ def main():
                             extractor = YouTubeTranscriptExtractor()
                             video_info = extractor.get_video_info(video_id)
                             transcript = extractor.get_transcript(video_id)
-                            
+
                             if transcript:
-                                success = chat_handler.load_video(video_id, transcript, video_info)
+                                success = chat_handler.load_video(
+                                    video_id, transcript, video_info)
                                 if success:
                                     st.session_state.current_video_loaded = True
                                     st.session_state.chat_history = []
                                     st.success("Video loaded and processed!")
                                     st.rerun()
                             else:
-                                st.error("Could not extract transcript. Please ensure the video has captions.")
-                                
+                                st.error(
+                                    "Could not extract transcript. Please ensure the video has captions."
+                                )
+
                 except Exception as e:
                     st.error(f"Error loading video: {str(e)}")
             else:
                 st.error("Invalid YouTube video ID")
         elif load_btn:
             st.warning("Please enter a YouTube video ID")
-        
+
         # Video information display with thumbnail
         if st.session_state.current_video_loaded:
             st.markdown("---")
             st.markdown("### 📊 Current Video")
             try:
-                video_info = st.session_state.enhanced_chat_handler.get_video_info()
+                video_info = st.session_state.enhanced_chat_handler.get_video_info(
+                )
                 if video_info:
                     # Display thumbnail if available
                     thumbnail_url = video_info.get('thumbnail')
@@ -744,7 +771,9 @@ def main():
                         # Create a responsive layout with thumbnail and info
                         col1, col2 = st.columns([1, 2])
                         with col1:
-                            st.markdown(f'<img src="{thumbnail_url}" class="video-thumbnail" style="width: 150px; height: auto;">', unsafe_allow_html=True)
+                            st.markdown(
+                                f'<img src="{thumbnail_url}" class="video-thumbnail" style="width: 150px; height: auto;">',
+                                unsafe_allow_html=True)
                         with col2:
                             st.markdown(f"""
                             <div style="padding-left: 1rem;">
@@ -757,7 +786,8 @@ def main():
                                     🆔 <code>{video_info.get('video_id', 'Unknown')}</code>
                                 </p>
                             </div>
-                            """, unsafe_allow_html=True)
+                            """,
+                                        unsafe_allow_html=True)
                     else:
                         # Fallback without thumbnail
                         st.markdown(f"""
@@ -771,10 +801,11 @@ def main():
                                 🆔 <code>{video_info.get('video_id', 'Unknown')}</code>
                             </p>
                         </div>
-                        """, unsafe_allow_html=True)
+                        """,
+                                    unsafe_allow_html=True)
             except Exception as e:
                 st.error(f"Error displaying video info: {str(e)}")
-    
+
     # Main content area with responsive design
     if not st.session_state.current_video_loaded:
         # Welcome screen with feature cards
@@ -793,8 +824,9 @@ def main():
                 <p>Extract key insights, highlight reels, mood analysis, and detailed summaries with timestamp references and citations.</p>
             </div>
         </div>
-        """, unsafe_allow_html=True)
-        
+        """,
+                    unsafe_allow_html=True)
+
         # Quick start guide
         st.markdown("---")
         col1, col2, col3 = st.columns([1, 2, 1])
@@ -809,11 +841,12 @@ def main():
                     <li>Start chatting with AI about the video content</li>
                 </ol>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                        unsafe_allow_html=True)
     else:
         # Chat interface with enhanced UI
         st.markdown("## 💬 Chat with AI")
-        
+
         # Chat history display
         if st.session_state.chat_history:
             for i, message in enumerate(st.session_state.chat_history):
@@ -824,151 +857,172 @@ def main():
                     with st.chat_message("assistant"):
                         st.write(message["content"])
         else:
-            st.info("Start a conversation about the video! Ask questions, request summaries, or explore the content.")
-        
+            st.info(
+                "Start a conversation about the video! Ask questions, request summaries, or explore the content."
+            )
+
         # Chat input
         if prompt := st.chat_input("Ask anything about this video..."):
             # Add user message to chat history
-            st.session_state.chat_history.append({"role": "user", "content": prompt})
-            
+            st.session_state.chat_history.append({
+                "role": "user",
+                "content": prompt
+            })
+
             # Display user message
             with st.chat_message("user"):
                 st.write(prompt)
-            
+
             # Generate AI response
             with st.chat_message("assistant"):
                 with st.spinner("Thinking..."):
                     try:
                         response = st.session_state.enhanced_chat_handler.get_response(
-                            prompt, st.session_state.chat_history
-                        )
+                            prompt, st.session_state.chat_history)
                         st.write(response)
-                        
+
                         # Add assistant response to chat history
-                        st.session_state.chat_history.append({"role": "assistant", "content": response})
-                        
+                        st.session_state.chat_history.append({
+                            "role":
+                            "assistant",
+                            "content":
+                            response
+                        })
+
                     except Exception as e:
                         error_msg = f"I apologize, but I encountered an error: {str(e)}"
                         st.error(error_msg)
-                        st.session_state.chat_history.append({"role": "assistant", "content": error_msg})
-        
+                        st.session_state.chat_history.append({
+                            "role":
+                            "assistant",
+                            "content":
+                            error_msg
+                        })
+
         # Feature buttons with responsive layout
         st.markdown("---")
         st.markdown("### 🛠️ AI Features")
-        
+
         # Create responsive button grid
         col1, col2, col3, col4 = st.columns(4)
-        
+
         with col1:
             if st.button("📋 Generate Summary", use_container_width=True):
                 with st.spinner("Generating summary..."):
                     try:
-                        summary = st.session_state.enhanced_chat_handler.get_video_summary()
+                        summary = st.session_state.enhanced_chat_handler.get_video_summary(
+                        )
                         st.session_state.video_summary = summary
                         st.rerun()
                     except Exception as e:
                         st.error(f"Error generating summary: {str(e)}")
-        
+
         with col2:
             if st.button("✨ Highlight Reel", use_container_width=True):
                 with st.spinner("Creating highlights..."):
                     try:
-                        highlights = st.session_state.enhanced_chat_handler.get_highlight_reel()
+                        highlights = st.session_state.enhanced_chat_handler.get_highlight_reel(
+                        )
                         st.session_state.video_highlights = highlights
                         st.rerun()
                     except Exception as e:
                         st.error(f"Error creating highlights: {str(e)}")
-        
+
         with col3:
             if st.button("🎭 Mood Analysis", use_container_width=True):
                 with st.spinner("Analyzing mood..."):
                     try:
-                        mood = st.session_state.enhanced_chat_handler.get_video_mood_analysis()
+                        mood = st.session_state.enhanced_chat_handler.get_video_mood_analysis(
+                        )
                         st.session_state.video_mood = mood
                         st.rerun()
                     except Exception as e:
                         st.error(f"Error analyzing mood: {str(e)}")
-        
+
         with col4:
             if st.button("🧠 Study Guide", use_container_width=True):
                 with st.spinner("Creating study guide..."):
                     try:
-                        study_guide = st.session_state.enhanced_chat_handler.generate_study_guide()
+                        study_guide = st.session_state.enhanced_chat_handler.generate_study_guide(
+                        )
                         st.session_state.study_guide = study_guide
                         st.rerun()
                     except Exception as e:
                         st.error(f"Error creating study guide: {str(e)}")
-        
+
         # Display generated content
         if st.session_state.get('video_summary'):
             with st.expander("📋 Video Summary", expanded=False):
                 st.write(st.session_state.video_summary)
-        
+
         if st.session_state.get('video_highlights'):
             with st.expander("✨ Highlight Reel", expanded=False):
                 st.write(st.session_state.video_highlights)
-        
+
         if st.session_state.get('video_mood'):
             with st.expander("🎭 Mood Analysis", expanded=False):
                 st.write(st.session_state.video_mood)
-        
+
         if st.session_state.get('study_guide'):
             with st.expander("🧠 Study Guide", expanded=False):
                 study_guide = st.session_state.study_guide
-                
+
                 if study_guide.get('learning_objectives'):
                     st.markdown("**Learning Objectives:**")
                     for obj in study_guide['learning_objectives']:
                         st.write(f"• {obj}")
-                
+
                 if study_guide.get('key_concepts'):
                     st.markdown("**Key Concepts:**")
                     for concept in study_guide['key_concepts']:
                         if isinstance(concept, dict):
-                            st.write(f"• **{concept.get('term', 'Unknown')}**: {concept.get('definition', 'No definition')}")
+                            st.write(
+                                f"• **{concept.get('term', 'Unknown')}**: {concept.get('definition', 'No definition')}"
+                            )
                         else:
                             st.write(f"• {concept}")
-        
+
         # Additional features row
         st.markdown("---")
         col1, col2, col3 = st.columns(3)
-        
+
         with col1:
             if st.button("🗃️ Quick Notes", use_container_width=True):
                 with st.spinner("Creating quick notes..."):
                     try:
-                        notes = st.session_state.enhanced_chat_handler.generate_study_notes()
+                        notes = st.session_state.enhanced_chat_handler.generate_study_notes(
+                        )
                         st.session_state.study_notes = notes
                         st.rerun()
                     except Exception as e:
                         st.error(f"Error creating notes: {str(e)}")
-        
+
         with col2:
             if st.button("🃏 Flashcards", use_container_width=True):
                 with st.spinner("Generating flashcards..."):
                     try:
-                        flashcards = st.session_state.enhanced_chat_handler.generate_flashcards(15)
+                        flashcards = st.session_state.enhanced_chat_handler.generate_flashcards(
+                            15)
                         st.session_state.flashcards = flashcards
                         st.rerun()
                     except Exception as e:
                         st.error(f"Error generating flashcards: {str(e)}")
-        
+
         with col3:
             if st.button("📄 Export All", use_container_width=True):
                 try:
                     report = generate_comprehensive_report()
-                    pdf_content = generate_pdf_content("YouTube Video Analysis Report", report)
-                    
-                    st.download_button(
-                        label="📥 Download PDF Report",
-                        data=pdf_content,
-                        file_name="video_analysis_report.pdf",
-                        mime="application/pdf",
-                        use_container_width=True
-                    )
+                    pdf_content = generate_pdf_content(
+                        "YouTube Video Analysis Report", report)
+
+                    st.download_button(label="📥 Download PDF Report",
+                                       data=pdf_content,
+                                       file_name="video_analysis_report.pdf",
+                                       mime="application/pdf",
+                                       use_container_width=True)
                 except Exception as e:
                     st.error(f"Error generating report: {str(e)}")
-        
+
         # Display additional content
         if st.session_state.get('study_notes'):
             with st.expander("🗃️ Quick Study Notes", expanded=False):
@@ -979,16 +1033,19 @@ def main():
                     st.markdown("**Key Points:**")
                     for point in notes['key_points']:
                         st.write(f"• {point}")
-        
+
         if st.session_state.get('flashcards'):
             with st.expander("🃏 Flashcards", expanded=False):
                 flashcards = st.session_state.flashcards
                 for i, card in enumerate(flashcards[:10], 1):  # Show first 10
-                    st.markdown(f"**Card {i}** ({card.get('difficulty', 'medium')})")
-                    st.markdown(f"**Q:** {card.get('question', 'No question')}")
+                    st.markdown(
+                        f"**Card {i}** ({card.get('difficulty', 'medium')})")
+                    st.markdown(
+                        f"**Q:** {card.get('question', 'No question')}")
                     st.markdown(f"**A:** {card.get('answer', 'No answer')}")
                     if i < min(len(flashcards), 10):
                         st.markdown("---")
+
 
 if __name__ == "__main__":
     main()
