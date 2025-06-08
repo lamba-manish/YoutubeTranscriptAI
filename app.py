@@ -736,8 +736,8 @@ def main():
                         st.error(f"Error loading video: {str(e)}")
                 else:
                     st.error("Invalid YouTube URL or video ID")
-            elif load_btn:
-                st.warning("Please enter a YouTube video ID or URL")
+        elif load_btn:
+            st.warning("Please enter a YouTube video ID or URL")
         
         # Video information display
         if st.session_state.current_video_loaded:
@@ -978,11 +978,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-                col3, col4, col5 = st.columns(3)
-                
-                with col3:
-                    if st.button("📖 Study Guide", use_container_width=True):
-                        with st.spinner("Generating comprehensive study guide..."):
                             study_guide = st.session_state.enhanced_chat_handler.generate_study_guide()
                             st.session_state.study_guide = study_guide
                             st.rerun()
