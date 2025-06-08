@@ -609,25 +609,17 @@ if 'video_loaded' not in st.session_state:
 if 'current_video_loaded' not in st.session_state:
     st.session_state.current_video_loaded = False
 
-def extract_video_id(url_or_id):
-    """Extract YouTube video ID from URL or return ID if already provided"""
-    if not url_or_id:
+def extract_video_id(video_id):
+    """Validate and return YouTube video ID if it's in correct format"""
+    if not video_id:
         return None
     
-    # If it's already a video ID (11 characters, alphanumeric + - and _)
-    if re.match(r'^[a-zA-Z0-9_-]{11}$', url_or_id):
-        return url_or_id
+    # Clean the input (remove whitespace)
+    video_id = video_id.strip()
     
-    # Extract from various YouTube URL formats
-    patterns = [
-        r'(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/)([a-zA-Z0-9_-]{11})',
-        r'youtube\.com/watch\?.*v=([a-zA-Z0-9_-]{11})'
-    ]
-    
-    for pattern in patterns:
-        match = re.search(pattern, url_or_id)
-        if match:
-            return match.group(1)
+    # Validate video ID format (11 characters, alphanumeric + - and _)
+    if re.match(r'^[a-zA-Z0-9_-]{11}$', video_id):
+        return video_id
     
     return None
 
@@ -648,9 +640,9 @@ def main():
         
         # Video ID input with improved styling
         video_input = st.text_input(
-            "YouTube Video ID or URL",
-            placeholder="dQw4w9WgXcQ or https://youtu.be/...",
-            help="Enter a YouTube video ID or URL"
+            "YouTube Video ID",
+            placeholder="dQw4w9WgXcQ",
+            help="Enter a YouTube video ID (11 characters)"
         )
         
         # Primary action button
@@ -735,29 +727,51 @@ def main():
                 except Exception as e:
                     st.error(f"Error loading video: {str(e)}")
             else:
-                st.error("Invalid YouTube URL or video ID")
+                st.error("Invalid YouTube video ID")
         elif load_btn:
-            st.warning("Please enter a YouTube video ID or URL")
+            st.warning("Please enter a YouTube video ID")
         
-        # Video information display
+        # Video information display with thumbnail
         if st.session_state.current_video_loaded:
             st.markdown("---")
             st.markdown("### 📊 Current Video")
             try:
                 video_info = st.session_state.enhanced_chat_handler.get_video_info()
                 if video_info:
-                    st.markdown(f"""
-                    <div class="custom-container">
-                        <h4 style="color: var(--secondary-accent); margin-bottom: 0.5rem;">
-                            {video_info.get('title', 'Unknown Title')[:30]}{'...' if len(video_info.get('title', '')) > 30 else ''}
-                        </h4>
-                        <p style="margin: 0; color: var(--secondary-text); font-size: 0.9rem;">
-                            📺 {video_info.get('channel', 'Unknown Channel')}<br>
-                            ⏱️ {video_info.get('duration', 'Unknown Duration')}<br>
-                            🆔 <code>{video_info.get('video_id', 'Unknown')}</code>
-                        </p>
-                    </div>
-                    """, unsafe_allow_html=True)
+                    # Display thumbnail if available
+                    thumbnail_url = video_info.get('thumbnail_url')
+                    if thumbnail_url:
+                        # Create a responsive layout with thumbnail and info
+                        col1, col2 = st.columns([1, 2])
+                        with col1:
+                            st.image(thumbnail_url, width=150)
+                        with col2:
+                            st.markdown(f"""
+                            <div style="padding-left: 1rem;">
+                                <h4 style="color: var(--secondary-accent); margin-bottom: 0.5rem; line-height: 1.2;">
+                                    {video_info.get('title', 'Unknown Title')}
+                                </h4>
+                                <p style="margin: 0; color: var(--secondary-text); font-size: 0.9rem;">
+                                    📺 {video_info.get('channel', 'Unknown Channel')}<br>
+                                    ⏱️ {video_info.get('duration', 'Unknown Duration')}<br>
+                                    🆔 <code>{video_info.get('video_id', 'Unknown')}</code>
+                                </p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                    else:
+                        # Fallback without thumbnail
+                        st.markdown(f"""
+                        <div class="custom-container">
+                            <h4 style="color: var(--secondary-accent); margin-bottom: 0.5rem;">
+                                {video_info.get('title', 'Unknown Title')}
+                            </h4>
+                            <p style="margin: 0; color: var(--secondary-text); font-size: 0.9rem;">
+                                📺 {video_info.get('channel', 'Unknown Channel')}<br>
+                                ⏱️ {video_info.get('duration', 'Unknown Duration')}<br>
+                                🆔 <code>{video_info.get('video_id', 'Unknown')}</code>
+                            </p>
+                        </div>
+                        """, unsafe_allow_html=True)
             except Exception as e:
                 st.error(f"Error displaying video info: {str(e)}")
     
