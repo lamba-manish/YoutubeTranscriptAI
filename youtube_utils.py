@@ -94,7 +94,13 @@ class YouTubeTranscriptExtractor:
             # Get available transcripts
             transcript_list_data = YouTubeTranscriptApi.list_transcripts(video_id)
             
-            # Try languages in priority order
+            # Log what's available for debugging
+            manual_transcripts = [t for t in transcript_list_data if not t.is_generated]
+            auto_transcripts = [t for t in transcript_list_data if t.is_generated]
+            print(f"Debug - Manual transcripts: {[f'{t.language_code}({t.language})' for t in manual_transcripts]}")
+            print(f"Debug - Auto-generated transcripts: {[f'{t.language_code}({t.language})' for t in auto_transcripts]}")
+            
+            # Try languages in priority order (both manual and auto-generated)
             for lang_code in priority_languages:
                 try:
                     transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=[lang_code])
@@ -104,28 +110,53 @@ class YouTubeTranscriptExtractor:
                 except:
                     continue
             
-            # If preferred languages not available, try any available transcript with translation
+            # Try to find any available transcript (manual or auto-generated)
+            available_transcripts = []
             for transcript in transcript_list_data:
-                try:
-                    # Try to translate to English if possible
-                    if transcript.language_code != 'en' and transcript.is_translatable:
-                        translated_transcript = transcript.translate('en').fetch()
-                        if translated_transcript and len(translated_transcript) > 0:
-                            print(f"Debug - Found {transcript.language} transcript, translated to English with {len(translated_transcript)} segments")
-                            return self._format_transcript(translated_transcript)
-                except Exception as translate_error:
-                    print(f"Debug - Translation failed for {transcript.language_code}: {translate_error}")
-                    continue
+                available_transcripts.append({
+                    'transcript': transcript,
+                    'code': transcript.language_code,
+                    'language': transcript.language,
+                    'is_generated': transcript.is_generated,
+                    'is_translatable': transcript.is_translatable
+                })
             
-            # Last resort: try any available transcript in original language
-            for transcript in transcript_list_data:
+            print(f"Debug - Available transcripts: {[(t['code'], t['language'], 'auto' if t['is_generated'] else 'manual') for t in available_transcripts]}")
+            
+            # First try manual transcripts with translation
+            for transcript_info in available_transcripts:
+                if not transcript_info['is_generated'] and transcript_info['is_translatable']:
+                    try:
+                        translated_transcript = transcript_info['transcript'].translate('en').fetch()
+                        if translated_transcript and len(translated_transcript) > 0:
+                            print(f"Debug - Found manual {transcript_info['language']} transcript, translated to English with {len(translated_transcript)} segments")
+                            return self._format_transcript(translated_transcript)
+                    except Exception as translate_error:
+                        print(f"Debug - Manual translation failed for {transcript_info['code']}: {translate_error}")
+                        continue
+            
+            # Then try auto-generated transcripts with translation
+            for transcript_info in available_transcripts:
+                if transcript_info['is_generated'] and transcript_info['is_translatable']:
+                    try:
+                        translated_transcript = transcript_info['transcript'].translate('en').fetch()
+                        if translated_transcript and len(translated_transcript) > 0:
+                            print(f"Debug - Found auto-generated {transcript_info['language']} transcript, translated to English with {len(translated_transcript)} segments")
+                            return self._format_transcript(translated_transcript)
+                    except Exception as translate_error:
+                        print(f"Debug - Auto-generated translation failed for {transcript_info['code']}: {translate_error}")
+                        continue
+            
+            # Last resort: try any available transcript in original language (manual first, then auto-generated)
+            for transcript_info in available_transcripts:
                 try:
-                    original_transcript = transcript.fetch()
+                    original_transcript = transcript_info['transcript'].fetch()
                     if original_transcript and len(original_transcript) > 0:
-                        print(f"Debug - Using original {transcript.language} transcript with {len(original_transcript)} segments")
+                        transcript_type = "auto-generated" if transcript_info['is_generated'] else "manual"
+                        print(f"Debug - Using {transcript_type} {transcript_info['language']} transcript with {len(original_transcript)} segments")
                         return self._format_transcript(original_transcript)
                 except Exception as orig_error:
-                    print(f"Debug - Original transcript failed for {transcript.language_code}: {orig_error}")
+                    print(f"Debug - Original transcript failed for {transcript_info['code']}: {orig_error}")
                     continue
                 
         except TranscriptsDisabled:
@@ -133,8 +164,21 @@ class YouTubeTranscriptExtractor:
             return None
         except Exception as e:
             print(f"Debug - Fallback failed: {str(e)}")
+            try:
+                # Try to get transcript list to show what's available
+                transcript_list_data = YouTubeTranscriptApi.list_transcripts(video_id)
+                available_info = []
+                for transcript in transcript_list_data:
+                    transcript_type = "auto-generated" if transcript.is_generated else "manual"
+                    available_info.append(f"{transcript.language} ({transcript_type})")
+                
+                if available_info:
+                    st.warning(f"Could not extract transcript. Available transcripts: {', '.join(available_info)}")
+                else:
+                    st.error("This video does not have any captions available.")
+            except:
+                st.error("Could not extract transcript from this video. The video may not have captions available.")
         
-        st.error("Could not extract transcript from this video. The video may not have captions available.")
         return None
     
     def _get_transcript_direct(self, video_id):

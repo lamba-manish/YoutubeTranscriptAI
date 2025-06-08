@@ -746,8 +746,15 @@ def main():
             "Preferred transcript language:",
             options=list(language_options.keys()),
             index=0,
-            help="Choose preferred language for transcript extraction. Auto-detect will try multiple languages."
+            help="Choose preferred language for transcript extraction. Auto-detect will try multiple languages including auto-generated captions."
         )
+        
+        # Add info about auto-generated transcripts
+        st.markdown("""
+        <div style="font-size: 0.8rem; color: var(--secondary-text); margin-top: 0.5rem;">
+            💡 <strong>Auto-generated support:</strong> The system will try both manual and auto-generated transcripts in your preferred language, then fall back to translation if needed.
+        </div>
+        """, unsafe_allow_html=True)
         
         # Primary action button
         col1, col2 = st.columns([1, 1])
