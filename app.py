@@ -598,91 +598,68 @@ st.markdown("""
         box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
     }
     
-    /* Compact video list styling */
-    .video-list-item {
-        padding: 0.75rem;
-        margin: 0.5rem 0;
-        border-radius: var(--border-radius);
-        background: var(--card-background);
+    /* Fixed-size video list buttons */
+    .stButton > button[data-testid*="video_"] {
+        height: 80px !important;
+        min-height: 80px !important;
+        max-height: 80px !important;
+        background: var(--accent-bg) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: var(--border-radius) !important;
+        padding: 0.75rem !important;
+        transition: var(--transition) !important;
+        position: relative !important;
+        overflow: hidden !important;
+        white-space: pre-wrap !important;
+        text-align: left !important;
+        line-height: 1.3 !important;
+        font-size: 0.85rem !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        align-items: flex-start !important;
+    }
+    
+    .stButton > button[data-testid*="video_"]:hover {
+        background: var(--hover-color) !important;
+        border-color: var(--accent-color) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2) !important;
+    }
+    
+    /* Video list item tooltip */
+    .video-tooltip {
+        position: absolute;
+        top: -100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--primary-bg);
         border: 1px solid var(--border-color);
-        transition: all 0.3s ease;
-        cursor: pointer;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .video-list-item:hover {
-        background: var(--hover-color);
-        border-color: var(--primary-color);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    }
-    
-    .video-list-item::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-        transition: left 0.5s ease;
-    }
-    
-    .video-list-item:hover::before {
-        left: 100%;
-    }
-    
-    .video-title {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: var(--text-color);
-        margin-bottom: 0.25rem;
-        line-height: 1.3;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-    
-    .video-meta {
-        font-size: 0.75rem;
-        color: var(--secondary-text);
-        opacity: 0.8;
-    }
-    
-    .video-id-badge {
-        background: var(--primary-color);
-        color: white;
-        padding: 0.125rem 0.375rem;
-        border-radius: 12px;
-        font-size: 0.65rem;
-        font-weight: 500;
-        margin-top: 0.25rem;
-        display: inline-block;
-    }
-    
-    .load-video-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(var(--accent-color-rgb), 0.9);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        font-size: 0.9rem;
+        border-radius: var(--border-radius);
+        padding: 0.75rem;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        z-index: 1000;
         opacity: 0;
-        transition: opacity 0.3s ease;
         pointer-events: none;
+        transition: opacity 0.3s ease;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        max-width: 300px;
+        white-space: normal;
     }
     
-    .video-list-item:hover .load-video-overlay {
+    .stButton > button[data-testid*="video_"]:hover .video-tooltip {
         opacity: 1;
-        pointer-events: all;
+    }
+    
+    /* Truncate text in fixed-size buttons */
+    .video-button-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        width: 100%;
     }
     
     @keyframes pulse {
@@ -765,21 +742,31 @@ def main():
                         video_id = video['video_id']
                         title = video['title']
                         channel = video['channel']
+                        duration = video.get('duration', 'Unknown')
                         
-                        # Single clickable button for entire video info
-                        if st.button(
-                            f"{title}\n{channel} • {video_id}", 
-                            key=f"video_{video_id}",
-                            help=f"Click to load: {title}",
-                            use_container_width=True
-                        ):
-                            with st.spinner("Loading video..."):
-                                success = st.session_state.enhanced_chat_handler.load_video(video_id)
-                                if success:
-                                    st.session_state.current_video_loaded = True
-                                    st.session_state.chat_history = []
-                                    st.session_state.show_saved_videos = False
-                                    st.rerun()
+                        # Truncate title for consistent button size
+                        truncated_title = title[:35] + '...' if len(title) > 35 else title
+                        truncated_channel = channel[:20] + '...' if len(channel) > 20 else channel
+                        
+                        # Create fixed-size button with truncated text
+                        button_text = f"{truncated_title}\n{truncated_channel} • {video_id}"
+                        
+                        # Single clickable button for entire video info with tooltip
+                        button_container = st.container()
+                        with button_container:
+                            if st.button(
+                                button_text,
+                                key=f"video_{video_id}",
+                                help=f"Full title: {title}\nChannel: {channel}\nDuration: {duration}\nVideo ID: {video_id}",
+                                use_container_width=True
+                            ):
+                                with st.spinner("Loading video..."):
+                                    success = st.session_state.enhanced_chat_handler.load_video(video_id)
+                                    if success:
+                                        st.session_state.current_video_loaded = True
+                                        st.session_state.chat_history = []
+                                        st.session_state.show_saved_videos = False
+                                        st.rerun()
                 else:
                     st.info("No saved videos yet")
             except Exception as e:
