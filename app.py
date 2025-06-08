@@ -126,7 +126,7 @@ def generate_comprehensive_report():
 # Page configuration
 st.set_page_config(
     page_title="YouTube Transcript Chat AI",
-    page_icon="🚀",
+    page_icon="🎬",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -137,33 +137,29 @@ st.markdown("""
     /* Import modern fonts */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
     
-    /* Root variables for consistent theming with modern light colors */
+    /* Root variables for consistent theming */
     :root {
-        --primary-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        --secondary-bg: #f8faff;
-        --accent-bg: #ffffff;
-        --primary-text: #2d3748;
-        --secondary-text: #4a5568;
-        --accent-color: #667eea;
-        --secondary-accent: #38b2ac;
-        --border-color: #e2e8f0;
-        --hover-color: #edf2f7;
-        --success-color: #48bb78;
-        --warning-color: #ed8936;
-        --error-color: #f56565;
-        --light-blue: #ebf8ff;
-        --light-purple: #faf5ff;
-        --light-green: #f0fff4;
-        --light-orange: #fffaf0;
-        --shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        --border-radius: 16px;
+        --primary-bg: #0F0F23;
+        --secondary-bg: #1A1A2E;
+        --accent-bg: #16213E;
+        --primary-text: #FFFFFF;
+        --secondary-text: #B8BCC8;
+        --accent-color: #FF6B6B;
+        --secondary-accent: #4ECDC4;
+        --border-color: #2D2D44;
+        --hover-color: #3A3A5C;
+        --success-color: #06D6A0;
+        --warning-color: #FFD60A;
+        --error-color: #EF476F;
+        --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        --border-radius: 12px;
         --button-height: 44px;
         --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     /* Global app styling */
     .stApp {
-        background: var(--secondary-bg);
+        background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
         color: var(--primary-text);
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         line-height: 1.6;
@@ -493,7 +489,7 @@ st.markdown("""
     .feature-card:hover {
         border-color: var(--secondary-accent);
         transform: translateY(-4px);
-        box-shadow: 0 20px 40px rgba(102, 126, 234, 0.15);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
     }
     
     .feature-card h3 {
@@ -628,13 +624,11 @@ def extract_video_id(video_id):
     return None
 
 def main():
-    # Hero section with modern design
+    # Hero section with proper centering
     st.markdown("""
-    <div class="center-content" style="background: linear-gradient(135deg, var(--light-blue) 0%, var(--light-purple) 100%); padding: 3rem 2rem; border-radius: var(--border-radius); margin-bottom: 2rem; border: 1px solid var(--border-color);">
-        <h1 style="background: linear-gradient(135deg, var(--accent-color), var(--secondary-accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 3rem; font-weight: 700; text-align: center;">
-            🚀 YouTube Transcript Chat AI
-        </h1>
-        <p style="font-size: 1.25rem; color: var(--secondary-text); text-align: center; max-width: 600px; margin: 1.5rem auto 0;">
+    <div class="center-content">
+        <h1>🎬 YouTube Transcript Chat AI</h1>
+        <p style="font-size: 1.25rem; color: var(--secondary-text); text-align: center; max-width: 600px;">
             Transform your YouTube watching experience with AI-powered conversations, study guides, and advanced RAG implementation.
         </p>
     </div>
@@ -786,31 +780,31 @@ def main():
         # Welcome screen with feature cards
         st.markdown("""
         <div class="responsive-grid">
-            <div class="feature-card" style="background: linear-gradient(135deg, var(--light-blue) 0%, #f0f9ff 100%);">
+            <div class="feature-card">
                 <h3>🤖 AI-Powered Chat</h3>
                 <p>Have intelligent conversations about any YouTube video using advanced RAG technology with semantic search and context-aware responses.</p>
             </div>
-            <div class="feature-card" style="background: linear-gradient(135deg, var(--light-green) 0%, #f0fff4 100%);">
+            <div class="feature-card">
                 <h3>📚 Study Materials</h3>
                 <p>Generate comprehensive study guides, flashcards, and learning paths automatically from video content with AI analysis.</p>
             </div>
-            <div class="feature-card" style="background: linear-gradient(135deg, var(--light-purple) 0%, #faf5ff 100%);">
+            <div class="feature-card">
                 <h3>🎯 Smart Analysis</h3>
                 <p>Extract key insights, highlight reels, mood analysis, and detailed summaries with timestamp references and citations.</p>
             </div>
         </div>
         """, unsafe_allow_html=True)
         
-        # Quick start guide with modern styling
+        # Quick start guide
         st.markdown("---")
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.markdown("""
-            <div class="center-content" style="background: linear-gradient(135deg, var(--light-orange) 0%, #fff7ed 100%); padding: 2rem; border-radius: var(--border-radius); border: 1px solid var(--border-color);">
-                <h2 style="color: var(--accent-color); font-weight: 600;">🚀 Quick Start</h2>
-                <p style="color: var(--secondary-text); margin-bottom: 1.5rem;">Get started in 3 simple steps:</p>
-                <ol style="text-align: left; max-width: 400px; margin: 0 auto; color: var(--primary-text); line-height: 2;">
-                    <li>Enter a YouTube video ID in the sidebar</li>
+            <div class="center-content">
+                <h2>🚀 Quick Start</h2>
+                <p>Get started in 3 simple steps:</p>
+                <ol style="text-align: left; max-width: 400px;">
+                    <li>Enter a YouTube video ID or URL in the sidebar</li>
                     <li>Click "Load Video" to process the transcript</li>
                     <li>Start chatting with AI about the video content</li>
                 </ol>
