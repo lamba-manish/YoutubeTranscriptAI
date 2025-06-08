@@ -55,35 +55,60 @@ class YouTubeTranscriptExtractor:
     
     def get_transcript(self, video_id, languages=['en']):
         """
-        Extract transcript using direct HTTP approach for better reliability
+        Extract transcript using comprehensive multi-language support
         Returns formatted transcript text or None if not available
         """
+        # Extended language priority list
+        priority_languages = [
+            'en',       # English
+            'hi',       # Hindi
+            'es',       # Spanish
+            'fr',       # French
+            'de',       # German
+            'pt',       # Portuguese
+            'ar',       # Arabic
+            'zh-cn',    # Chinese (Simplified)
+            'zh-tw',    # Chinese (Traditional)
+            'ja',       # Japanese
+            'ko',       # Korean
+            'ru',       # Russian
+            'it',       # Italian
+            'nl',       # Dutch
+            'sv',       # Swedish
+            'tr',       # Turkish
+            'pl',       # Polish
+            'th',       # Thai
+            'vi',       # Vietnamese
+            'id',       # Indonesian
+        ]
+        
         # First try the direct HTTP approach
         transcript = self._get_transcript_direct(video_id)
         if transcript:
             return transcript
             
-        # Fallback to youtube-transcript-api with multi-language support
+        # Fallback to youtube-transcript-api with comprehensive language support
         try:
-            print(f"Debug - Fallback: Using youtube-transcript-api for {video_id}")
+            print(f"Debug - Using youtube-transcript-api for {video_id}")
             
-            # Try to get available transcripts
+            # Get available transcripts
             transcript_list_data = YouTubeTranscriptApi.list_transcripts(video_id)
             
-            # First try English
-            try:
-                transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=['en'])
-                if transcript_list and len(transcript_list) > 0:
-                    print(f"Debug - Found English transcript with {len(transcript_list)} segments")
-                    return self._format_transcript(transcript_list)
-            except:
-                pass
+            # Try languages in priority order
+            for lang_code in priority_languages:
+                try:
+                    transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=[lang_code])
+                    if transcript_list and len(transcript_list) > 0:
+                        print(f"Debug - Found {lang_code} transcript with {len(transcript_list)} segments")
+                        return self._format_transcript(transcript_list)
+                except:
+                    continue
             
-            # If English not available, try other languages and translate
+            # If preferred languages not available, try any available transcript with translation
             for transcript in transcript_list_data:
                 try:
+                    # Try to translate to English if possible
                     if transcript.language_code != 'en' and transcript.is_translatable:
-                        # Get transcript and translate to English
                         translated_transcript = transcript.translate('en').fetch()
                         if translated_transcript and len(translated_transcript) > 0:
                             print(f"Debug - Found {transcript.language} transcript, translated to English with {len(translated_transcript)} segments")
@@ -92,7 +117,7 @@ class YouTubeTranscriptExtractor:
                     print(f"Debug - Translation failed for {transcript.language_code}: {translate_error}")
                     continue
             
-            # If translation fails, try original language
+            # Last resort: try any available transcript in original language
             for transcript in transcript_list_data:
                 try:
                     original_transcript = transcript.fetch()
@@ -216,18 +241,32 @@ class YouTubeTranscriptExtractor:
             formatted_text = ""
             
             for entry in transcript_data:
-                # YouTube transcript API returns dict format: {'text': '...', 'start': ..., 'duration': ...}
-                start_time = self._seconds_to_timestamp(entry['start'])
-                text = entry['text'].strip()
-                
-                # Clean up the text
-                text = re.sub(r'\s+', ' ', text)  # Normalize whitespace
-                text = text.replace('\n', ' ')    # Remove line breaks
-                
-                if text:  # Only add non-empty text
-                    formatted_text += f"[{start_time}] {text}\n"
+                try:
+                    # Handle both dict and object formats
+                    if hasattr(entry, 'text') and hasattr(entry, 'start'):
+                        # YouTube transcript API object format
+                        start_time = self._seconds_to_timestamp(entry.start)
+                        text = entry.text.strip()
+                    elif isinstance(entry, dict):
+                        # Dictionary format: {'text': '...', 'start': ..., 'duration': ...}
+                        start_time = self._seconds_to_timestamp(entry['start'])
+                        text = entry['text'].strip()
+                    else:
+                        # Skip entries we can't process
+                        continue
+                    
+                    # Clean up the text
+                    text = re.sub(r'\s+', ' ', text)  # Normalize whitespace
+                    text = text.replace('\n', ' ')    # Remove line breaks
+                    
+                    if text:  # Only add non-empty text
+                        formatted_text += f"[{start_time}] {text}\n"
+                        
+                except Exception as entry_error:
+                    print(f"Debug - Error processing transcript entry: {entry_error}")
+                    continue
             
-            return formatted_text.strip()
+            return formatted_text.strip() if formatted_text else None
             
         except Exception as e:
             print(f"Error formatting transcript: {str(e)}")

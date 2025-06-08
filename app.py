@@ -720,6 +720,35 @@ def main():
             help="Enter a YouTube video ID (11 characters)"
         )
         
+        # Language preference for transcript extraction
+        st.markdown("#### 🌐 Language Preference")
+        language_options = {
+            "Auto-detect (Recommended)": "auto",
+            "English": "en",
+            "Hindi": "hi", 
+            "Spanish": "es",
+            "French": "fr",
+            "German": "de",
+            "Portuguese": "pt",
+            "Arabic": "ar",
+            "Chinese (Simplified)": "zh-cn",
+            "Japanese": "ja",
+            "Korean": "ko",
+            "Russian": "ru",
+            "Italian": "it",
+            "Turkish": "tr",
+            "Thai": "th",
+            "Vietnamese": "vi",
+            "Indonesian": "id"
+        }
+        
+        selected_language = st.selectbox(
+            "Preferred transcript language:",
+            options=list(language_options.keys()),
+            index=0,
+            help="Choose preferred language for transcript extraction. Auto-detect will try multiple languages."
+        )
+        
         # Primary action button
         col1, col2 = st.columns([1, 1])
         with col1:
@@ -778,6 +807,7 @@ def main():
             if video_id:
                 try:
                     chat_handler = st.session_state.enhanced_chat_handler
+                    selected_lang_code = language_options[selected_language]
                     
                     if chat_handler.db_manager.video_exists(video_id):
                         with st.spinner("Loading from database..."):
@@ -788,20 +818,26 @@ def main():
                                 st.success("Video loaded successfully!")
                                 st.rerun()
                     else:
-                        with st.spinner("Extracting transcript..."):
+                        lang_msg = f"Extracting transcript ({selected_language})..." if selected_lang_code != "auto" else "Extracting transcript (auto-detecting language)..."
+                        with st.spinner(lang_msg):
                             extractor = YouTubeTranscriptExtractor()
                             video_info = extractor.get_video_info(video_id)
-                            transcript = extractor.get_transcript(video_id)
+                            
+                            # Pass language preference if not auto-detect
+                            if selected_lang_code == "auto":
+                                transcript = extractor.get_transcript(video_id)
+                            else:
+                                transcript = extractor.get_transcript(video_id, languages=[selected_lang_code])
                             
                             if transcript:
                                 success = chat_handler.load_video(video_id, transcript, video_info)
                                 if success:
                                     st.session_state.current_video_loaded = True
                                     st.session_state.chat_history = []
-                                    st.success("Video loaded and processed!")
+                                    st.success(f"Video loaded and processed in {selected_language}!")
                                     st.rerun()
                             else:
-                                st.error("Could not extract transcript. Please ensure the video has captions.")
+                                st.error(f"Could not extract transcript in {selected_language}. Try selecting 'Auto-detect' or check if the video has captions available.")
                                 
                 except Exception as e:
                     st.error(f"Error loading video: {str(e)}")
