@@ -628,11 +628,13 @@ def extract_video_id(video_id):
     return None
 
 def main():
-    # Hero section with proper centering
+    # Hero section with modern design
     st.markdown("""
-    <div class="center-content">
-        <h1>🎬 YouTube Transcript Chat AI</h1>
-        <p style="font-size: 1.25rem; color: var(--secondary-text); text-align: center; max-width: 600px;">
+    <div class="center-content" style="background: linear-gradient(135deg, var(--light-blue) 0%, var(--light-purple) 100%); padding: 3rem 2rem; border-radius: var(--border-radius); margin-bottom: 2rem; border: 1px solid var(--border-color);">
+        <h1 style="background: linear-gradient(135deg, var(--accent-color), var(--secondary-accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 3rem; font-weight: 700; text-align: center;">
+            🚀 YouTube Transcript Chat AI
+        </h1>
+        <p style="font-size: 1.25rem; color: var(--secondary-text); text-align: center; max-width: 600px; margin: 1.5rem auto 0;">
             Transform your YouTube watching experience with AI-powered conversations, study guides, and advanced RAG implementation.
         </p>
     </div>
@@ -784,31 +786,31 @@ def main():
         # Welcome screen with feature cards
         st.markdown("""
         <div class="responsive-grid">
-            <div class="feature-card">
+            <div class="feature-card" style="background: linear-gradient(135deg, var(--light-blue) 0%, #f0f9ff 100%);">
                 <h3>🤖 AI-Powered Chat</h3>
                 <p>Have intelligent conversations about any YouTube video using advanced RAG technology with semantic search and context-aware responses.</p>
             </div>
-            <div class="feature-card">
+            <div class="feature-card" style="background: linear-gradient(135deg, var(--light-green) 0%, #f0fff4 100%);">
                 <h3>📚 Study Materials</h3>
                 <p>Generate comprehensive study guides, flashcards, and learning paths automatically from video content with AI analysis.</p>
             </div>
-            <div class="feature-card">
+            <div class="feature-card" style="background: linear-gradient(135deg, var(--light-purple) 0%, #faf5ff 100%);">
                 <h3>🎯 Smart Analysis</h3>
                 <p>Extract key insights, highlight reels, mood analysis, and detailed summaries with timestamp references and citations.</p>
             </div>
         </div>
         """, unsafe_allow_html=True)
         
-        # Quick start guide
+        # Quick start guide with modern styling
         st.markdown("---")
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.markdown("""
-            <div class="center-content">
-                <h2>🚀 Quick Start</h2>
-                <p>Get started in 3 simple steps:</p>
-                <ol style="text-align: left; max-width: 400px;">
-                    <li>Enter a YouTube video ID or URL in the sidebar</li>
+            <div class="center-content" style="background: linear-gradient(135deg, var(--light-orange) 0%, #fff7ed 100%); padding: 2rem; border-radius: var(--border-radius); border: 1px solid var(--border-color);">
+                <h2 style="color: var(--accent-color); font-weight: 600;">🚀 Quick Start</h2>
+                <p style="color: var(--secondary-text); margin-bottom: 1.5rem;">Get started in 3 simple steps:</p>
+                <ol style="text-align: left; max-width: 400px; margin: 0 auto; color: var(--primary-text); line-height: 2;">
+                    <li>Enter a YouTube video ID in the sidebar</li>
                     <li>Click "Load Video" to process the transcript</li>
                     <li>Start chatting with AI about the video content</li>
                 </ol>
