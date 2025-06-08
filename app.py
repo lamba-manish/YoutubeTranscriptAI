@@ -739,12 +739,12 @@ def main():
                 video_info = st.session_state.enhanced_chat_handler.get_video_info()
                 if video_info:
                     # Display thumbnail if available
-                    thumbnail_url = video_info.get('thumbnail_url')
+                    thumbnail_url = video_info.get('thumbnail')
                     if thumbnail_url:
                         # Create a responsive layout with thumbnail and info
                         col1, col2 = st.columns([1, 2])
                         with col1:
-                            st.image(thumbnail_url, width=150)
+                            st.markdown(f'<img src="{thumbnail_url}" class="video-thumbnail" style="width: 150px; height: auto;">', unsafe_allow_html=True)
                         with col2:
                             st.markdown(f"""
                             <div style="padding-left: 1rem;">
