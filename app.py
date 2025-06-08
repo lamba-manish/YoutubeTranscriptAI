@@ -766,33 +766,20 @@ def main():
                         title = video['title']
                         channel = video['channel']
                         
-                        # Create compact list item with custom styling
-                        with st.container():
-                            # Display video info with custom styling
-                            st.markdown(f"""
-                            <div class="video-list-item">
-                                <div class="video-title">{title}</div>
-                                <div class="video-meta">{channel}</div>
-                                <div class="video-id-badge">{video_id}</div>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            
-                            # Hidden button that triggers on click
-                            if st.button(
-                                f"🚀 Load {title[:20]}{'...' if len(title) > 20 else ''}", 
-                                key=f"load_btn_{video_id}",
-                                help=f"Load video: {title}",
-                                use_container_width=True
-                            ):
-                                # Add loading animation
-                                st.markdown('<div class="loading-animation">Loading video...</div>', unsafe_allow_html=True)
-                                with st.spinner("Loading video..."):
-                                    success = st.session_state.enhanced_chat_handler.load_video(video_id)
-                                    if success:
-                                        st.session_state.current_video_loaded = True
-                                        st.session_state.chat_history = []
-                                        st.session_state.show_saved_videos = False
-                                        st.rerun()
+                        # Single clickable button for entire video info
+                        if st.button(
+                            f"{title}\n{channel} • {video_id}", 
+                            key=f"video_{video_id}",
+                            help=f"Click to load: {title}",
+                            use_container_width=True
+                        ):
+                            with st.spinner("Loading video..."):
+                                success = st.session_state.enhanced_chat_handler.load_video(video_id)
+                                if success:
+                                    st.session_state.current_video_loaded = True
+                                    st.session_state.chat_history = []
+                                    st.session_state.show_saved_videos = False
+                                    st.rerun()
                 else:
                     st.info("No saved videos yet")
             except Exception as e:
