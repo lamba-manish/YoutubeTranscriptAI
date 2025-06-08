@@ -1,0 +1,42 @@
+# YouTube Transcript Chat AI - Complete Dependencies
+# Industry-Standard RAG Implementation with Advanced Features
+
+# Core Application Framework
+streamlit>=1.28.0
+python-dotenv>=1.0.0
+
+# AI and Machine Learning - Advanced RAG Stack
+openai>=1.0.0
+langchain>=0.1.0
+langchain-community>=0.0.20
+langchain-openai>=0.0.5
+faiss-cpu>=1.7.4
+
+# Database and Storage
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+
+# PDF Generation and Document Processing
+reportlab>=4.0.0
+
+# YouTube and Web Integration
+youtube-transcript-api>=0.6.0
+requests>=2.31.0
+
+# Data Processing and Analysis
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Development and Testing (Optional)
+pytest>=7.4.0
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.5.0
+
+# Production Deployment (Optional)
+gunicorn>=21.0.0
+redis>=4.5.0
+
+# Environment and Configuration
+pydantic>=2.0.0
+typing-extensions>=4.7.0
