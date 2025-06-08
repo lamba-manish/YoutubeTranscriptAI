@@ -9,6 +9,9 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from youtube_utils import YouTubeTranscriptExtractor
 from backend.enhanced_chat_handler import EnhancedChatHandler
+from dotenv import load_dotenv
+load_dotenv()
+
 
 def generate_flashcard_text(cards):
     """Convert flashcards to formatted text"""
