@@ -131,303 +131,470 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for YouTube-inspired modern design
+# Modern responsive CSS with consistent button widths and proper centering
 st.markdown("""
 <style>
-    /* Import Roboto font */
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+    /* Import modern fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
     
-    /* Main theme colors and styling */
+    /* Root variables for consistent theming */
+    :root {
+        --primary-bg: #0F0F23;
+        --secondary-bg: #1A1A2E;
+        --accent-bg: #16213E;
+        --primary-text: #FFFFFF;
+        --secondary-text: #B8BCC8;
+        --accent-color: #FF6B6B;
+        --secondary-accent: #4ECDC4;
+        --border-color: #2D2D44;
+        --hover-color: #3A3A5C;
+        --success-color: #06D6A0;
+        --warning-color: #FFD60A;
+        --error-color: #EF476F;
+        --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        --border-radius: 12px;
+        --button-height: 44px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Global app styling */
     .stApp {
-        background-color: #0F0F0F;
-        color: #FFFFFF;
-        font-family: 'Roboto', sans-serif;
-    }
-    
-    /* Sidebar styling */
-    .css-1d391kg {
-        background-color: #212121;
-        border-right: 1px solid #303030;
-    }
-    
-    /* Main content area */
-    .main .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-        background-color: #0F0F0F;
-    }
-    
-    /* Title styling */
-    h1 {
-        color: #FF0000;
-        font-weight: 700;
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-        text-align: center;
-    }
-    
-    /* Headers */
-    h2, h3 {
-        color: #FFFFFF;
-        font-weight: 500;
-    }
-    
-    /* Sidebar headers */
-    .css-1d391kg h1, .css-1d391kg h2, .css-1d391kg h3 {
-        color: #FFFFFF;
-    }
-    
-    /* Input fields */
-    .stTextInput > div > div > input {
-        background-color: #212121;
-        color: #FFFFFF;
-        border: 1px solid #303030;
-        border-radius: 8px;
-        font-family: 'Roboto', sans-serif;
-    }
-    
-    .stTextInput > div > div > input:focus {
-        border-color: #065FD4;
-        box-shadow: 0 0 0 1px #065FD4;
-    }
-    
-    /* Buttons */
-    .stButton > button {
-        background-color: #FF0000;
-        color: #FFFFFF;
-        border: none;
-        border-radius: 24px;
-        font-weight: 500;
-        font-family: 'Roboto', sans-serif;
-        transition: all 0.3s ease;
-        padding: 0.5rem 1.5rem;
-    }
-    
-    .stButton > button:hover {
-        background-color: #CC0000;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
-    }
-    
-    /* Secondary buttons */
-    .stButton > button[kind="secondary"] {
-        background-color: #303030;
-        color: #FFFFFF;
-        border: 1px solid #AAAAAA;
-    }
-    
-    .stButton > button[kind="secondary"]:hover {
-        background-color: #404040;
-        border-color: #FFFFFF;
-    }
-    
-    /* Chat messages */
-    .stChatMessage {
-        background-color: #212121;
-        border-radius: 12px;
-        border: 1px solid #303030;
-        margin: 0.5rem 0;
-    }
-    
-    /* Chat input */
-    .stChatInput > div > div > div > div {
-        background-color: #212121;
-        border: 1px solid #303030;
-        border-radius: 24px;
-    }
-    
-    .stChatInput input {
-        color: #FFFFFF;
-        font-family: 'Roboto', sans-serif;
-    }
-    
-    /* Success/Error messages */
-    .stSuccess {
-        background-color: rgba(6, 95, 212, 0.1);
-        color: #065FD4;
-        border-left: 4px solid #065FD4;
-        border-radius: 4px;
-    }
-    
-    .stError {
-        background-color: rgba(255, 0, 0, 0.1);
-        color: #FF0000;
-        border-left: 4px solid #FF0000;
-        border-radius: 4px;
-    }
-    
-    .stWarning {
-        background-color: rgba(255, 193, 7, 0.1);
-        color: #FFC107;
-        border-left: 4px solid #FFC107;
-        border-radius: 4px;
-    }
-    
-    /* Dividers */
-    hr {
-        border-color: #303030;
-        margin: 1.5rem 0;
-    }
-    
-    /* Markdown text */
-    .markdown-text-container {
-        color: #AAAAAA;
+        background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
+        color: var(--primary-text);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         line-height: 1.6;
     }
     
-    /* Image styling */
-    .stImage > img {
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    /* Remove default margins and improve spacing */
+    .main .block-container {
+        padding: 2rem 1rem;
+        max-width: 1200px;
+        margin: 0 auto;
     }
     
-    /* Container styling */
-    .stContainer {
-        background-color: #212121;
-        border-radius: 12px;
-        padding: 1.5rem;
-        border: 1px solid #303030;
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .main .block-container {
+            padding: 1rem 0.5rem;
+        }
+    }
+    
+    /* Sidebar styling */
+    .css-1d391kg, [data-testid="stSidebar"] {
+        background: var(--secondary-bg);
+        border-right: 1px solid var(--border-color);
+    }
+    
+    /* Header styling with proper centering */
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        letter-spacing: -0.025em;
+        margin: 0 0 1rem 0;
+    }
+    
+    h1 {
+        color: var(--accent-color);
+        font-size: clamp(2rem, 5vw, 3rem);
+        text-align: center;
+        background: linear-gradient(135deg, var(--accent-color), var(--secondary-accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 2rem;
+    }
+    
+    h2 {
+        color: var(--primary-text);
+        font-size: clamp(1.5rem, 3vw, 2rem);
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 0.5rem;
+    }
+    
+    h3 {
+        color: var(--secondary-accent);
+        font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+    }
+    
+    /* Consistent button styling with fixed widths */
+    .stButton > button {
+        background: linear-gradient(135deg, var(--accent-color), #FF5252);
+        color: var(--primary-text);
+        border: none;
+        border-radius: var(--border-radius);
+        font-weight: 500;
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        height: var(--button-height);
+        min-width: 140px;
+        width: 100%;
+        max-width: 300px;
+        margin: 0.25rem 0;
+        transition: var(--transition);
+        box-shadow: var(--shadow);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stButton > button:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: var(--transition);
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+    }
+    
+    .stButton > button:hover:before {
+        left: 100%;
+    }
+    
+    .stButton > button:active {
+        transform: translateY(0);
+    }
+    
+    /* Secondary button variant */
+    .stButton > button[kind="secondary"] {
+        background: var(--accent-bg);
+        border: 1px solid var(--border-color);
+        color: var(--primary-text);
+    }
+    
+    .stButton > button[kind="secondary"]:hover {
+        background: var(--hover-color);
+        border-color: var(--secondary-accent);
+        box-shadow: 0 8px 25px rgba(78, 205, 196, 0.3);
+    }
+    
+    /* Button container for consistent centering */
+    .stButton {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0.5rem 0;
+    }
+    
+    /* Input field styling */
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea {
+        background: var(--accent-bg);
+        color: var(--primary-text);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        padding: 12px 16px;
+        transition: var(--transition);
+    }
+    
+    .stTextInput > div > div > input:focus,
+    .stTextArea > div > div > textarea:focus {
+        border-color: var(--secondary-accent);
+        box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
+        outline: none;
+    }
+    
+    /* Chat interface styling */
+    .stChatMessage {
+        background: var(--accent-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
         margin: 1rem 0;
+        box-shadow: var(--shadow);
+        transition: var(--transition);
     }
     
-    /* Spinner */
-    .stSpinner > div {
-        border-top-color: #FF0000;
+    .stChatMessage:hover {
+        border-color: var(--secondary-accent);
+    }
+    
+    .stChatInput > div {
+        background: var(--accent-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        overflow: hidden;
+    }
+    
+    .stChatInput input {
+        color: var(--primary-text);
+        font-family: 'Inter', sans-serif;
+        background: transparent;
+        border: none;
+        padding: 12px 20px;
+    }
+    
+    /* Container and card styling */
+    .custom-container {
+        background: var(--accent-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin: 1rem 0;
+        box-shadow: var(--shadow);
+        transition: var(--transition);
+    }
+    
+    .custom-container:hover {
+        border-color: var(--secondary-accent);
+        transform: translateY(-2px);
+    }
+    
+    /* Metric and info display */
+    .stMetric {
+        background: var(--accent-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 1rem;
+        text-align: center;
+    }
+    
+    .stMetric > div {
+        color: var(--primary-text);
+    }
+    
+    .stMetric .metric-label {
+        color: var(--secondary-text);
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .stMetric .metric-value {
+        color: var(--accent-color);
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+    
+    /* Alert and message styling */
+    .stSuccess {
+        background: rgba(6, 214, 160, 0.1);
+        border: 1px solid var(--success-color);
+        border-radius: var(--border-radius);
+        color: var(--success-color);
+        padding: 1rem;
+    }
+    
+    .stError {
+        background: rgba(239, 71, 111, 0.1);
+        border: 1px solid var(--error-color);
+        border-radius: var(--border-radius);
+        color: var(--error-color);
+        padding: 1rem;
+    }
+    
+    .stWarning {
+        background: rgba(255, 214, 10, 0.1);
+        border: 1px solid var(--warning-color);
+        border-radius: var(--border-radius);
+        color: var(--warning-color);
+        padding: 1rem;
+    }
+    
+    .stInfo {
+        background: rgba(78, 205, 196, 0.1);
+        border: 1px solid var(--secondary-accent);
+        border-radius: var(--border-radius);
+        color: var(--secondary-accent);
+        padding: 1rem;
     }
     
     /* Download button */
     .stDownloadButton > button {
-        background-color: #065FD4;
-        color: #FFFFFF;
-        border-radius: 8px;
-        font-family: 'Roboto', sans-serif;
+        background: linear-gradient(135deg, var(--secondary-accent), #26D0CE);
+        color: var(--primary-text);
+        border: none;
+        border-radius: var(--border-radius);
+        font-weight: 500;
+        height: var(--button-height);
+        min-width: 140px;
+        width: 100%;
+        max-width: 300px;
+        transition: var(--transition);
+        box-shadow: var(--shadow);
     }
     
     .stDownloadButton > button:hover {
-        background-color: #0047AB;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(78, 205, 196, 0.4);
     }
     
-    /* Column styling */
-    .element-container {
-        color: #FFFFFF;
+    /* Selectbox and other inputs */
+    .stSelectbox > div > div {
+        background: var(--accent-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
     }
     
-    /* Metrics and info boxes */
-    .metric-container {
-        background-color: #212121;
-        padding: 1rem;
-        border-radius: 8px;
-        border: 1px solid #303030;
+    .stSelectbox > div > div > div {
+        color: var(--primary-text);
     }
     
-    /* Custom welcome card */
-    .welcome-card {
-        background: linear-gradient(135deg, #212121 0%, #303030 100%);
-        border-radius: 16px;
-        padding: 2rem;
-        border: 1px solid #404040;
-        margin: 1rem 0;
+    /* Spinner and loading states */
+    .stSpinner > div {
+        border-top-color: var(--accent-color);
     }
     
-    /* Video info card */
-    .video-info-card {
-        background-color: #212121;
-        border-radius: 12px;
-        padding: 1rem;
-        border: 1px solid #303030;
-        margin: 0.5rem 0;
+    /* Progress bar */
+    .stProgress > div > div > div {
+        background: linear-gradient(135deg, var(--accent-color), var(--secondary-accent));
     }
     
-    /* Chat history counter */
-    .chat-counter {
-        background-color: #303030;
-        color: #AAAAAA;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-size: 0.9rem;
-        text-align: center;
+    /* Responsive grid system */
+    .responsive-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
     }
     
-    /* Mobile responsiveness */
     @media (max-width: 768px) {
-        .main .block-container {
-            padding-left: 1rem;
-            padding-right: 1rem;
-        }
-        
-        h1 {
-            font-size: 2rem;
-        }
-        
-        .welcome-card {
-            padding: 1.5rem;
-        }
-        
-        .video-info-card {
-            padding: 0.8rem;
+        .responsive-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
         }
     }
     
-    /* Loading animation */
+    /* Center content containers */
+    .center-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        margin: 2rem 0;
+    }
+    
+    /* Feature card styling */
+    .feature-card {
+        background: var(--accent-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        text-align: center;
+        transition: var(--transition);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .feature-card:hover {
+        border-color: var(--secondary-accent);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    }
+    
+    .feature-card h3 {
+        color: var(--secondary-accent);
+        margin-bottom: 1rem;
+    }
+    
+    .feature-card p {
+        color: var(--secondary-text);
+        flex-grow: 1;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Typography improvements */
+    p, li, span {
+        color: var(--secondary-text);
+        line-height: 1.7;
+    }
+    
+    /* Code styling */
+    code {
+        background: var(--primary-bg);
+        color: var(--secondary-accent);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.875rem;
+    }
+    
+    pre {
+        background: var(--primary-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 1rem;
+        overflow-x: auto;
+    }
+    
+    /* Divider styling */
+    hr {
+        border: none;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+        margin: 2rem 0;
+    }
+    
+    /* Image styling */
+    .stImage > img {
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        transition: var(--transition);
+    }
+    
+    .stImage > img:hover {
+        transform: scale(1.02);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    }
+    
+    /* Animation for loading states */
     @keyframes pulse {
         0% { opacity: 1; }
-        50% { opacity: 0.7; }
+        50% { opacity: 0.5; }
         100% { opacity: 1; }
     }
     
-    .loading-text {
-        animation: pulse 1.5s ease-in-out infinite;
+    .loading {
+        animation: pulse 2s infinite;
     }
     
-    /* Hover effects for interactive elements */
-    .video-info-card:hover {
-        transform: translateY(-2px);
-        transition: transform 0.3s ease;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-    }
-    
-    .welcome-card:hover {
-        transform: translateY(-2px);
-        transition: transform 0.3s ease;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
-    }
-    
-    /* Status indicators */
-    .status-indicator {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        margin-right: 0.5rem;
-    }
-    
-    .status-online {
-        background-color: #00FF00;
-        box-shadow: 0 0 6px #00FF00;
-    }
-    
-    .status-loading {
-        background-color: #FFC107;
-        box-shadow: 0 0 6px #FFC107;
-        animation: pulse 1s ease-in-out infinite;
-    }
-    
-    /* Custom scrollbar */
+    /* Scrollbar styling */
     ::-webkit-scrollbar {
         width: 8px;
     }
     
     ::-webkit-scrollbar-track {
-        background: #212121;
+        background: var(--primary-bg);
     }
     
     ::-webkit-scrollbar-thumb {
-        background: #404040;
+        background: var(--border-color);
         border-radius: 4px;
     }
     
     ::-webkit-scrollbar-thumb:hover {
-        background: #505050;
+        background: var(--hover-color);
+    }
+    
+    /* Ensure proper spacing and alignment */
+    .element-container {
+        margin: 1rem 0;
+    }
+    
+    /* Video thumbnail styling */
+    .video-thumbnail {
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        transition: var(--transition);
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+        display: block;
+    }
+    
+    .video-thumbnail:hover {
+        transform: scale(1.02);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -465,84 +632,84 @@ def extract_video_id(url_or_id):
     return None
 
 def main():
-    # App title with status indicator
-    if st.session_state.enhanced_chat_handler.is_video_loaded():
-        status_html = '<span class="status-indicator status-online"></span>'
-        status_text = "Ready to Chat"
-    else:
-        status_html = '<span class="status-indicator status-loading"></span>'
-        status_text = "Waiting for Video"
-    
-    st.markdown(f"""
-    <div style='text-align: center; margin-bottom: 2rem;'>
-        <h1 style='margin-bottom: 0.5rem;'>🎬 YouTube Transcript Chat AI</h1>
-        <div style='color: #AAAAAA; font-size: 1rem;'>
-            {status_html}{status_text}
-        </div>
+    # Hero section with proper centering
+    st.markdown("""
+    <div class="center-content">
+        <h1>🎬 YouTube Transcript Chat AI</h1>
+        <p style="font-size: 1.25rem; color: var(--secondary-text); text-align: center; max-width: 600px;">
+            Transform your YouTube watching experience with AI-powered conversations, study guides, and advanced RAG implementation.
+        </p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Sidebar for video input and info
+    # Sidebar with responsive design
     with st.sidebar:
-        st.header("📹 Video Input")
+        st.markdown("### 📹 Video Input")
         
-        # Show available videos button
-        if st.button("📋 Show Saved Videos", type="secondary", use_container_width=True):
+        # Video ID input with improved styling
+        video_input = st.text_input(
+            "YouTube Video ID or URL",
+            placeholder="dQw4w9WgXcQ or https://youtu.be/...",
+            help="Enter a YouTube video ID or URL"
+        )
+        
+        # Primary action button
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            load_btn = st.button("🚀 Load Video", type="primary", use_container_width=True)
+        with col2:
+            saved_btn = st.button("📋 Saved Videos", type="secondary", use_container_width=True)
+        
+        # Handle saved videos display
+        if saved_btn:
             st.session_state.show_saved_videos = not st.session_state.get('show_saved_videos', False)
         
-        # Display saved videos if requested
+        # Display saved videos with improved UI
         if st.session_state.get('show_saved_videos', False):
+            st.markdown("---")
+            st.markdown("### 💾 Saved Videos")
             try:
                 available_videos = st.session_state.enhanced_chat_handler.get_available_videos()
                 if available_videos:
-                    st.markdown("### 💾 Saved Videos")
-                    for video in available_videos[:8]:  # Show max 8 in sidebar
+                    for i, video in enumerate(available_videos[:5]):  # Show max 5 in sidebar
                         with st.container():
-                            # Video info display
-                            title_short = video['title'][:30] + "..." if len(video['title']) > 30 else video['title']
-                            st.markdown(f"**{title_short}**")
-                            st.markdown(f"`{video['video_id']}`")
-                            st.markdown(f"*{video['channel']}*")
+                            st.markdown(f"""
+                            <div class="custom-container">
+                                <h4 style="margin-bottom: 0.5rem; color: var(--secondary-accent);">
+                                    {video['title'][:25]}{'...' if len(video['title']) > 25 else ''}
+                                </h4>
+                                <p style="margin: 0; font-size: 0.8rem; color: var(--secondary-text);">
+                                    {video['channel']}<br>
+                                    <code>{video['video_id']}</code>
+                                </p>
+                            </div>
+                            """, unsafe_allow_html=True)
                             
-                            # Load button
-                            if st.button(f"Load", key=f"load_{video['video_id']}", use_container_width=True):
-                                with st.spinner("Loading..."):
+                            if st.button(f"🚀 Load Video", key=f"load_{video['video_id']}", use_container_width=True):
+                                with st.spinner("Loading video..."):
                                     success = st.session_state.enhanced_chat_handler.load_video(video['video_id'])
                                     if success:
                                         st.session_state.current_video_loaded = True
                                         st.session_state.chat_history = []
-                                        # Clear previous video features
-                                        st.session_state.video_summary = None
-                                        st.session_state.video_highlights = None
-                                        st.session_state.video_mood = None
                                         st.session_state.show_saved_videos = False
                                         st.rerun()
-                            st.divider()
+                            
+                            if i < len(available_videos[:5]) - 1:
+                                st.markdown("---")
                 else:
                     st.info("No saved videos yet")
             except Exception as e:
-                st.error(f"Error: {str(e)}")
+                st.error(f"Error loading videos: {str(e)}")
         
-        # Video ID input
-        video_input = st.text_input(
-            "YouTube Video ID",
-            placeholder="dQw4w9WgXcQ",
-            help="Enter an 11-character YouTube video ID (found in the URL after v=)"
-        )
-        
-        if st.button("Load Video", type="primary"):
-            if video_input:
-                # Clean the input and validate it's a proper video ID
-                video_id = video_input.strip()
-                
-                # Basic validation for YouTube video ID format
-                if len(video_id) == 11 and re.match(r'^[a-zA-Z0-9_-]{11}$', video_id):
-                    try:
-                        # Check if video already exists in database
-                        chat_handler = st.session_state.enhanced_chat_handler
-                        
-                        if chat_handler.db_manager.video_exists(video_id):
-                            # Load from database
+        # Handle video loading
+        if load_btn and video_input:
+            video_id = extract_video_id(video_input)
+            if video_id:
+                try:
+                    chat_handler = st.session_state.enhanced_chat_handler
+                    
+                    if chat_handler.db_manager.video_exists(video_id):
+                        with st.spinner("Loading from database..."):
                             success = chat_handler.load_video(video_id)
                             if success:
                                 st.session_state.current_video_loaded = True
