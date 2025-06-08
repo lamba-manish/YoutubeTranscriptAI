@@ -705,106 +705,279 @@ def main():
         if load_btn and video_input:
             video_id = extract_video_id(video_input)
             if video_id:
-                try:
-                    chat_handler = st.session_state.enhanced_chat_handler
-                    
-                    if chat_handler.db_manager.video_exists(video_id):
-                        with st.spinner("Loading from database..."):
-                            success = chat_handler.load_video(video_id)
-                            if success:
-                                st.session_state.current_video_loaded = True
-                                st.session_state.chat_history = []  # Reset chat history
-                                # Clear previous video features
-                                st.session_state.video_summary = None
-                                st.session_state.video_highlights = None
-                                st.session_state.video_mood = None
-                                st.rerun()
+                    try:
+                        chat_handler = st.session_state.enhanced_chat_handler
+                        
+                        if chat_handler.db_manager.video_exists(video_id):
+                            with st.spinner("Loading from database..."):
+                                success = chat_handler.load_video(video_id)
+                                if success:
+                                    st.session_state.current_video_loaded = True
+                                    st.session_state.chat_history = []
+                                    st.success("Video loaded successfully!")
+                                    st.rerun()
                         else:
-                            # Extract new transcript
                             with st.spinner("Extracting transcript..."):
                                 extractor = YouTubeTranscriptExtractor()
                                 video_info = extractor.get_video_info(video_id)
                                 transcript = extractor.get_transcript(video_id)
                                 
                                 if transcript:
-                                    # Load and process with enhanced handler
                                     success = chat_handler.load_video(video_id, transcript, video_info)
                                     if success:
                                         st.session_state.current_video_loaded = True
-                                        st.session_state.chat_history = []  # Reset chat history
+                                        st.session_state.chat_history = []
+                                        st.success("Video loaded and processed!")
                                         st.rerun()
                                 else:
-                                    st.error("❌ Could not extract transcript from this video. Make sure the video has captions available.")
+                                    st.error("Could not extract transcript. Please ensure the video has captions.")
                                     
                     except Exception as e:
-                        st.error(f"❌ Error loading video: {str(e)}")
-                        st.info("💡 Try a different video ID or make sure the video has captions available.")
+                        st.error(f"Error loading video: {str(e)}")
                 else:
-                    st.error("❌ Please enter a valid 11-character YouTube video ID")
-            else:
-                st.warning("⚠️ Please enter a YouTube video ID")
+                    st.error("Invalid YouTube URL or video ID")
+            elif load_btn:
+                st.warning("Please enter a YouTube video ID or URL")
         
-        # Display video information with modern card design
+        # Video information display
         if st.session_state.current_video_loaded:
-            st.divider()
-            st.header("📊 Video Info")
+            st.markdown("---")
+            st.markdown("### 📊 Current Video")
+            try:
+                video_info = st.session_state.enhanced_chat_handler.get_video_info()
+                if video_info:
+                    st.markdown(f"""
+                    <div class="custom-container">
+                        <h4 style="color: var(--secondary-accent); margin-bottom: 0.5rem;">
+                            {video_info.get('title', 'Unknown Title')[:30]}{'...' if len(video_info.get('title', '')) > 30 else ''}
+                        </h4>
+                        <p style="margin: 0; color: var(--secondary-text); font-size: 0.9rem;">
+                            📺 {video_info.get('channel', 'Unknown Channel')}<br>
+                            ⏱️ {video_info.get('duration', 'Unknown Duration')}<br>
+                            🆔 <code>{video_info.get('video_id', 'Unknown')}</code>
+                        </p>
+                    </div>
+                    """, unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"Error displaying video info: {str(e)}")
+    
+    # Main content area with responsive design
+    if not st.session_state.current_video_loaded:
+        # Welcome screen with feature cards
+        st.markdown("""
+        <div class="responsive-grid">
+            <div class="feature-card">
+                <h3>🤖 AI-Powered Chat</h3>
+                <p>Have intelligent conversations about any YouTube video using advanced RAG technology with semantic search and context-aware responses.</p>
+            </div>
+            <div class="feature-card">
+                <h3>📚 Study Materials</h3>
+                <p>Generate comprehensive study guides, flashcards, and learning paths automatically from video content with AI analysis.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🎯 Smart Analysis</h3>
+                <p>Extract key insights, highlight reels, mood analysis, and detailed summaries with timestamp references and citations.</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Quick start guide
+        st.markdown("---")
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st.markdown("""
+            <div class="center-content">
+                <h2>🚀 Quick Start</h2>
+                <p>Get started in 3 simple steps:</p>
+                <ol style="text-align: left; max-width: 400px;">
+                    <li>Enter a YouTube video ID or URL in the sidebar</li>
+                    <li>Click "Load Video" to process the transcript</li>
+                    <li>Start chatting with AI about the video content</li>
+                </ol>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        # Chat interface with enhanced UI
+        st.markdown("## 💬 Chat with AI")
+        
+        # Chat history display
+        if st.session_state.chat_history:
+            for i, message in enumerate(st.session_state.chat_history):
+                if message["role"] == "user":
+                    with st.chat_message("user"):
+                        st.write(message["content"])
+                else:
+                    with st.chat_message("assistant"):
+                        st.write(message["content"])
+        else:
+            st.info("Start a conversation about the video! Ask questions, request summaries, or explore the content.")
+        
+        # Chat input
+        if prompt := st.chat_input("Ask anything about this video..."):
+            # Add user message to chat history
+            st.session_state.chat_history.append({"role": "user", "content": prompt})
             
-            video_info = st.session_state.enhanced_chat_handler.get_video_info()
+            # Display user message
+            with st.chat_message("user"):
+                st.write(prompt)
             
-            if video_info:
-                # Create a styled card for video info
-                st.markdown('<div class="video-info-card">', unsafe_allow_html=True)
+            # Generate AI response
+            with st.chat_message("assistant"):
+                with st.spinner("Thinking..."):
+                    try:
+                        response = st.session_state.enhanced_chat_handler.get_response(
+                            prompt, st.session_state.chat_history
+                        )
+                        st.write(response)
+                        
+                        # Add assistant response to chat history
+                        st.session_state.chat_history.append({"role": "assistant", "content": response})
+                        
+                    except Exception as e:
+                        error_msg = f"I apologize, but I encountered an error: {str(e)}"
+                        st.error(error_msg)
+                        st.session_state.chat_history.append({"role": "assistant", "content": error_msg})
+        
+        # Feature buttons with responsive layout
+        st.markdown("---")
+        st.markdown("### 🛠️ AI Features")
+        
+        # Create responsive button grid
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            if st.button("📋 Generate Summary", use_container_width=True):
+                with st.spinner("Generating summary..."):
+                    try:
+                        summary = st.session_state.enhanced_chat_handler.get_video_summary()
+                        st.session_state.video_summary = summary
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error generating summary: {str(e)}")
+        
+        with col2:
+            if st.button("✨ Highlight Reel", use_container_width=True):
+                with st.spinner("Creating highlights..."):
+                    try:
+                        highlights = st.session_state.enhanced_chat_handler.get_highlight_reel()
+                        st.session_state.video_highlights = highlights
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error creating highlights: {str(e)}")
+        
+        with col3:
+            if st.button("🎭 Mood Analysis", use_container_width=True):
+                with st.spinner("Analyzing mood..."):
+                    try:
+                        mood = st.session_state.enhanced_chat_handler.get_video_mood_analysis()
+                        st.session_state.video_mood = mood
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error analyzing mood: {str(e)}")
+        
+        with col4:
+            if st.button("🧠 Study Guide", use_container_width=True):
+                with st.spinner("Creating study guide..."):
+                    try:
+                        study_guide = st.session_state.enhanced_chat_handler.generate_study_guide()
+                        st.session_state.study_guide = study_guide
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error creating study guide: {str(e)}")
+        
+        # Display generated content
+        if st.session_state.get('video_summary'):
+            with st.expander("📋 Video Summary", expanded=False):
+                st.write(st.session_state.video_summary)
+        
+        if st.session_state.get('video_highlights'):
+            with st.expander("✨ Highlight Reel", expanded=False):
+                st.write(st.session_state.video_highlights)
+        
+        if st.session_state.get('video_mood'):
+            with st.expander("🎭 Mood Analysis", expanded=False):
+                st.write(st.session_state.video_mood)
+        
+        if st.session_state.get('study_guide'):
+            with st.expander("🧠 Study Guide", expanded=False):
+                study_guide = st.session_state.study_guide
                 
-                # Display thumbnail if available
-                if video_info.get('thumbnail'):
-                    st.image(video_info['thumbnail'], use_container_width=True)
+                if study_guide.get('learning_objectives'):
+                    st.markdown("**Learning Objectives:**")
+                    for obj in study_guide['learning_objectives']:
+                        st.write(f"• {obj}")
                 
-                # Display video details with better formatting
-                if video_info.get('title'):
-                    st.markdown(f"**🎬 Title**")
-                    st.markdown(f"<p style='color: #AAAAAA; margin-top: -10px;'>{video_info['title']}</p>", unsafe_allow_html=True)
-                
-                if video_info.get('channel'):
-                    st.markdown(f"**👤 Channel**")
-                    st.markdown(f"<p style='color: #AAAAAA; margin-top: -10px;'>{video_info['channel']}</p>", unsafe_allow_html=True)
-                
-                if video_info.get('duration'):
-                    st.markdown(f"**⏱️ Duration**")
-                    st.markdown(f"<p style='color: #AAAAAA; margin-top: -10px;'>{video_info['duration']}</p>", unsafe_allow_html=True)
-                
-                # Display database status
-                st.markdown(f"**💾 Database**")
-                st.markdown(f"<p style='color: #00FF00; margin-top: -10px;'>✓ Stored with vector embeddings</p>", unsafe_allow_html=True)
-                
-                st.markdown('</div>', unsafe_allow_html=True)
-                
-                # Feature buttons
-                st.divider()
-                st.header("🚀 Features")
-                
-                col1, col2 = st.columns(2)
-                with col1:
-                    if st.button("📋 Summary", use_container_width=True):
-                        with st.spinner("Generating summary..."):
-                            summary = st.session_state.enhanced_chat_handler.get_video_summary()
-                            st.session_state.video_summary = summary
+                if study_guide.get('key_concepts'):
+                    st.markdown("**Key Concepts:**")
+                    for concept in study_guide['key_concepts']:
+                        if isinstance(concept, dict):
+                            st.write(f"• **{concept.get('term', 'Unknown')}**: {concept.get('definition', 'No definition')}")
+                        else:
+                            st.write(f"• {concept}")
+        
+        # Additional features row
+        st.markdown("---")
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            if st.button("🗃️ Quick Notes", use_container_width=True):
+                with st.spinner("Creating quick notes..."):
+                    try:
+                        notes = st.session_state.enhanced_chat_handler.generate_study_notes()
+                        st.session_state.study_notes = notes
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error creating notes: {str(e)}")
+        
+        with col2:
+            if st.button("🃏 Flashcards", use_container_width=True):
+                with st.spinner("Generating flashcards..."):
+                    try:
+                        flashcards = st.session_state.enhanced_chat_handler.generate_flashcards(15)
+                        st.session_state.flashcards = flashcards
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error generating flashcards: {str(e)}")
+        
+        with col3:
+            if st.button("📄 Export All", use_container_width=True):
+                try:
+                    report = generate_comprehensive_report()
+                    pdf_content = generate_pdf_content("YouTube Video Analysis Report", report)
                     
-                    if st.button("🎬 Highlights", use_container_width=True):
-                        with st.spinner("Extracting highlights..."):
-                            highlights = st.session_state.enhanced_chat_handler.get_highlight_reel()
-                            st.session_state.video_highlights = highlights
-                
-                with col2:
-                    if st.button("😊 Mood Analysis", use_container_width=True):
-                        with st.spinner("Analyzing mood..."):
-                            mood = st.session_state.enhanced_chat_handler.get_video_mood_analysis()
-                            st.session_state.video_mood = mood
-                    
-                    if st.button("📚 Video History", use_container_width=True):
-                        st.session_state.show_history = True
-                
-                # Study Guide Features
-                st.markdown("#### 📚 Study Tools")
+                    st.download_button(
+                        label="📥 Download PDF Report",
+                        data=pdf_content,
+                        file_name="video_analysis_report.pdf",
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
+                except Exception as e:
+                    st.error(f"Error generating report: {str(e)}")
+        
+        # Display additional content
+        if st.session_state.get('study_notes'):
+            with st.expander("🗃️ Quick Study Notes", expanded=False):
+                notes = st.session_state.study_notes
+                if notes.get('summary'):
+                    st.markdown(f"**Summary:** {notes['summary']}")
+                if notes.get('key_points'):
+                    st.markdown("**Key Points:**")
+                    for point in notes['key_points']:
+                        st.write(f"• {point}")
+        
+        if st.session_state.get('flashcards'):
+            with st.expander("🃏 Flashcards", expanded=False):
+                flashcards = st.session_state.flashcards
+                for i, card in enumerate(flashcards[:10], 1):  # Show first 10
+                    st.markdown(f"**Card {i}** ({card.get('difficulty', 'medium')})")
+                    st.markdown(f"**Q:** {card.get('question', 'No question')}")
+                    st.markdown(f"**A:** {card.get('answer', 'No answer')}")
+                    if i < min(len(flashcards), 10):
+                        st.markdown("---")
+
+if __name__ == "__main__":
+    main()
                 col3, col4, col5 = st.columns(3)
                 
                 with col3:
