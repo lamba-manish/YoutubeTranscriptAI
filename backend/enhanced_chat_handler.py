@@ -272,16 +272,3 @@ class EnhancedChatHandler:
             )
         except Exception as e:
             return {"error": f"Failed to generate learning path: {str(e)}"}
-    
-    def delete_video(self, video_id: str) -> bool:
-        """
-        Delete video and all associated data from database
-        """
-        success = self.db_manager.delete_video(video_id)
-        
-        # If this was the currently loaded video, clear the session
-        if self.current_video_id == video_id:
-            self.current_video_id = None
-            self.current_video_info = None
-            
-        return success

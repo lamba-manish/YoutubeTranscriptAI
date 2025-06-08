@@ -677,43 +677,14 @@ def main():
                             </div>
                             """, unsafe_allow_html=True)
                             
-                            # Create button columns for load and delete actions
-                            btn_col1, btn_col2 = st.columns([2, 1])
-                            
-                            with btn_col1:
-                                if st.button(f"🚀 Load", key=f"load_{video['video_id']}", use_container_width=True):
-                                    with st.spinner("Loading video..."):
-                                        success = st.session_state.enhanced_chat_handler.load_video(video['video_id'])
-                                        if success:
-                                            st.session_state.current_video_loaded = True
-                                            st.session_state.chat_history = []
-                                            st.session_state.show_saved_videos = False
-                                            st.rerun()
-                            
-                            with btn_col2:
-                                if st.button(f"🗑️", key=f"delete_{video['video_id']}", use_container_width=True, type="secondary"):
-                                    # Add confirmation before deletion
-                                    if f"confirm_delete_{video['video_id']}" not in st.session_state:
-                                        st.session_state[f"confirm_delete_{video['video_id']}"] = True
-                                        st.warning(f"Click again to confirm deletion of: {video['title'][:20]}...")
+                            if st.button(f"🚀 Load Video", key=f"load_{video['video_id']}", use_container_width=True):
+                                with st.spinner("Loading video..."):
+                                    success = st.session_state.enhanced_chat_handler.load_video(video['video_id'])
+                                    if success:
+                                        st.session_state.current_video_loaded = True
+                                        st.session_state.chat_history = []
+                                        st.session_state.show_saved_videos = False
                                         st.rerun()
-                                    else:
-                                        # Perform deletion
-                                        with st.spinner("Removing video from database..."):
-                                            success = st.session_state.enhanced_chat_handler.delete_video(video['video_id'])
-                                            if success:
-                                                st.success(f"Video and embeddings removed from database!")
-                                                # Clear the currently loaded video if it was deleted
-                                                if st.session_state.get('current_video_loaded', False):
-                                                    current_video_info = st.session_state.enhanced_chat_handler.get_video_info()
-                                                    if current_video_info and current_video_info.get('video_id') == video['video_id']:
-                                                        st.session_state.current_video_loaded = False
-                                                        st.session_state.chat_history = []
-                                                # Clean up confirmation state
-                                                del st.session_state[f"confirm_delete_{video['video_id']}"]
-                                                st.rerun()
-                                            else:
-                                                st.error("Failed to remove video from database")
                             
                             if i < len(available_videos[:5]) - 1:
                                 st.markdown("---")
